@@ -33,31 +33,8 @@ import tests
 
 
 class TestNovaAPI(tests.FunctionalTest):
-    #def test_002_verify_nova_auth(self):
-    #    if 'keystone' in self.config:
-    #        path = "http://%s:%s/%s" % (self.keystone['host'],
-    #                                   self.keystone['port'],
-    #                                   self.keystone['apiver'])
-    #        headers = {'X-Auth-User': self.keystone['user'],
-    #                   'X-Auth-Key': self.keystone['pass']}
-    #    else:
-    #        path = "http://%s:%s/%s" % (self.nova['host'],
-    #                                    self.nova['port'],
-    #                                    self.nova['ver'])
-    #        headers = {'X-Auth-User': self.nova['user'],
-    #                   'X-Auth-Key': self.nova['key']}
-
-    #    http = httplib2.Http()
-    #    response, content = http.request(path, 'HEAD', headers=headers)
-    #    self.assertEqual(response.status, 204)
-    #    self.assertNotEqual(response['x-auth-token'], '')
-    #    self.assertNotEqual(response['x-server-management-url'], '')
-#
-    #    # Set up Auth Token for all future API interactions
-    #    self.nova['X-Auth-Token'] = response['x-auth-token']
-    #test_002_verify_nova_auth.tags = ['nova', 'nova-api']
-
     def test_101_verify_version_selection_default(self):
+        #path = self.nova['auth_path'] 
         path = "http://%s:%s/" % (self.nova['host'],
                                            self.nova['port'])
         http = httplib2.Http()
@@ -92,14 +69,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_103_verify_version_selection_xml.tags = ['nova', 'nova-api']
 
     def test_104_bad_user_bad_key(self):
-        if 'keystone' in self.config:
-            path = "http://%s:%s/%s" % (self.keystone['host'],
-                                       self.keystone['port'],
-                                       self.keystone['apiver'])
-        else:
-            path = "http://%s:%s/%s" % (self.nova['host'],
-                                        self.nova['port'],
-                                        self.nova['ver'])
+        path = self.nova['auth_path'] 
         http = httplib2.Http()
         headers = {'X-Auth-User': 'unknown_auth_user',
                   'X-Auth-Key': 'unknown_auth_key'}
@@ -108,14 +78,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_104_bad_user_bad_key.tags = ['nova', 'nova-api']
 
     def test_105_bad_user_good_key(self):
-        if 'keystone' in self.config:
-            path = "http://%s:%s/%s" % (self.keystone['host'],
-                                       self.keystone['port'],
-                                       self.keystone['apiver'])
-        else:
-            path = "http://%s:%s/%s" % (self.nova['host'],
-                                        self.nova['port'],
-                                        self.nova['ver'])
+        path = self.nova['auth_path'] 
         http = httplib2.Http()
         headers = {'X-Auth-User': 'unknown_auth_user',
                   'X-Auth-Key': self.nova['key']}
@@ -124,14 +87,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_105_bad_user_good_key.tags = ['nova', 'nova-api']
 
     def test_106_good_user_bad_key(self):
-        if 'keystone' in self.config:
-            path = "http://%s:%s/%s" % (self.keystone['host'],
-                                       self.keystone['port'],
-                                       self.keystone['apiver'])
-        else:
-            path = "http://%s:%s/%s" % (self.nova['host'],
-                                        self.nova['port'],
-                                        self.nova['ver'])
+        path = self.nova['auth_path'] 
         http = httplib2.Http()
         headers = {'X-Auth-User': self.nova['user'],
                   'X-Auth-Key': 'unknown_auth_key'}
@@ -140,14 +96,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_106_good_user_bad_key.tags = ['nova', 'nova-api']
 
     def test_107_no_key(self):
-        if 'keystone' in self.config:
-            path = "http://%s:%s/%s" % (self.keystone['host'],
-                                       self.keystone['port'],
-                                       self.keystone['apiver'])
-        else:
-            path = "http://%s:%s/%s" % (self.nova['host'],
-                                        self.nova['port'],
-                                        self.nova['ver'])
+        path = self.nova['auth_path'] 
         http = httplib2.Http()
         headers = {'X-Auth-User': self.nova['user']}
         response, content = http.request(path, 'GET', headers=headers)
@@ -155,14 +104,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_107_no_key.tags = ['nova', 'nova-api']
 
     def test_108_bad_token(self):
-        if 'keystone' in self.config:
-            path = "http://%s:%s/%s" % (self.keystone['host'],
-                                       self.keystone['port'],
-                                       self.keystone['apiver'])
-        else:
-            path = "http://%s:%s/%s" % (self.nova['host'],
-                                        self.nova['port'],
-                                        self.nova['ver'])
+        path = self.nova['auth_path'] 
         http = httplib2.Http()
         headers = {'X-Auth-Token': 'unknown_token'}
         response, content = http.request(path, 'GET', headers=headers)
@@ -170,10 +112,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_108_bad_token.tags = ['nova', 'nova-api']
 
     def test_109_verify_blank_limits(self):
-        path = "http://%s:%s/%s/limits" % (self.nova['host'],
-                                           self.nova['port'],
-                                           self.nova['ver'])
-
+        path = self.nova['path'] + '/limits'
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
@@ -183,9 +122,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_109_verify_blank_limits.tags = ['nova', 'nova-api']
 
     def test_110_list_flavors_v1_1(self):
-        path = "http://%s:%s/%s/flavors" % (self.nova['host'],
-                                            self.nova['port'],
-                                            self.nova['ver'])
+        path = self.nova['path'] + '/flavors'
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}

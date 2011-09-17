@@ -95,13 +95,11 @@ class TestNovaSpinup(tests.FunctionalTest):
     #                                    self.nova['ver'])
     #        headers = {'X-Auth-User': self.nova['user'],
     #                   'X-Auth-Key': self.nova['key']}
-#
     #    http = httplib2.Http()
     #    response, content = http.request(path, 'HEAD', headers=headers)
     #    self.assertEqual(response.status, 204)
     #    self.assertNotEqual(response['x-auth-token'], '')
     #    self.assertNotEqual(response['x-server-management-url'], '')
-#
     #    # Set up Auth Token for all future API interactions
     #    self.nova['X-Auth-Token'] = response['x-auth-token']
     #test_002_verify_nova_auth.tags = ['nova']
@@ -164,9 +162,10 @@ class TestNovaSpinup(tests.FunctionalTest):
     test_113_verify_image_active_v1_1.tags = ['nova']
 
     def test_200_create_server(self):
-        path = "http://%s:%s/%s/servers" % (self.nova['host'],
-                                            self.nova['port'],
-                                            self.nova['ver'])
+        path = self.nova['path'] + '/servers'
+        #path = "http://%s:%s/%s/servers" % (self.nova['host'],
+        #                                    self.nova['port'],
+        #                                    self.nova['ver'])
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token']),
@@ -200,11 +199,11 @@ class TestNovaSpinup(tests.FunctionalTest):
     test_200_create_server.tags = ['nova']
 
     def test_201_get_server_details(self):
-        path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
-                                               self.nova['port'],
-                                               self.nova['ver'],
-                                               self.nova['single_server_id'])
-
+        path = self.nova['path'] + '/servers/' + self.nova['single_server_id']
+        #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
+        #                                       self.nova['port'],
+        #                                       self.nova['ver'],
+        #                                       self.nova['single_server_id'])
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
@@ -213,11 +212,12 @@ class TestNovaSpinup(tests.FunctionalTest):
         self.assertEqual(response.status, 200)
     test_201_get_server_details.tags = ['nova']
 
-    def test_202(self):
-        path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
-                                               self.nova['port'],
-                                               self.nova['ver'],
-                                               self.nova['single_server_id'])
+    def test_202_delete_server(self):
+        path = self.nova['path'] + '/servers/' + self.nova['single_server_id']
+        #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
+        #                                       self.nova['port'],
+        #                                       self.nova['ver'],
+        #                                       self.nova['single_server_id'])
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
@@ -230,9 +230,10 @@ class TestNovaSpinup(tests.FunctionalTest):
     # def create_multi(self):
     def test_900_create_multiple(self):
         self.nova['multi_server'] = {}
-        path = "http://%s:%s/%s/servers" % (self.nova['host'],
-                                            self.nova['port'],
-                                            self.nova['ver'])
+        path = self.nova['path'] + '/servers'
+        #path = "http://%s:%s/%s/servers" % (self.nova['host'],
+        #                                    self.nova['port'],
+        #                                    self.nova['ver'])
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token']),
@@ -270,13 +271,14 @@ class TestNovaSpinup(tests.FunctionalTest):
             self.assertEqual(build_result['ping'], True)
     test_900_create_multiple.tags = ['nova']
 
-    def test_901(self):
+    def test_901_delete_multi_server(self):
         print "Deleting %s instances." % (len(self.nova['multi_server']))
         for k, v in self.nova['multi_server'].iteritems():
-            path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
-                                                   self.nova['port'],
-                                                   self.nova['ver'],
-                                                   v)
+            path = self.nova['path'] + '/severs/' + str(v)
+            #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
+            #                                       self.nova['port'],
+            #                                       self.nova['ver'],
+            #                                       v)
             http = httplib2.Http()
             headers = {'X-Auth-User': '%s' % (self.nova['user']),
                        'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
