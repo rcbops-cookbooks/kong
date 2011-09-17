@@ -15,10 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Functional test case to check the status of gepetto and
-set information of hosts etc..
-"""
+""" Examples of skip functionality """
 
 import os
 import tests
