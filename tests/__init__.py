@@ -78,18 +78,59 @@ class skip_unless(object):
         _skipper.__doc__ = func.__doc__
         return _skipper
 
-
 class FunctionalTest(unittest2.TestCase):
     @classmethod
     def setUpClass(self):
-        print "Running setUpClass"
-        pprint(self)
-        self.config = {}
+        # Setup project hashes
         self.glance = {}
-        self.nova = {}
         self.swift = {}
         self.rabbitmq = {}
-        self.keystone = {}
+
+        def parse_config_file(self):
+            cfg = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                   "..", "etc", "config.ini"))
+            if os.path.exists(cfg):
+                _build_config(self,cfg)
+            else:
+                raise Exception("Cannot read %s" % cfg)
+
+        def _build_config(self, config_file):
+            parser = ConfigParser.ConfigParser()
+            parser.read(config_file)
+
+            for section in parser.sections():
+                self.config[section] = {}
+                for value in parser.options(section):
+                    self.config[section][value] = parser.get(section, value)
+                    # print "%s = %s" % (value, parser.get(section, value))
+
+        def setupNova(self):
+            ret_hash = {}
+            ret_hash['host'] = self.config['nova']['host']
+            ret_hash['port'] = self.config['nova']['port']
+            ret_hash['ver'] = self.config['nova']['apiver']
+            ret_hash['user'] = self.config['nova']['user']
+            ret_hash['key'] = self.config['nova']['key']
+            return ret_hash
+
+        def setupKeystone(self):
+            ret_hash = {}
+            ret_hash['host'] = self.config['keystone']['host']
+            ret_hash['port'] = self.config['keystone']['port']
+            ret_hash['apiver'] = self.config['keystone']['apiver']
+            ret_hash['user'] = self.config['keystone']['user']
+            ret_hash['pass'] = self.config['keystone']['password']
+            return ret_hash
+
+        # Parse the config file
+        self.config = {}
+        parse_config_file(self)
+        pprint(self.config)
+
+        if 'nova' in self.config:
+            self.nova = setupNova(self)
+        if 'keystone' in self.config:
+            self.keystone = setupKeystone(self)
 
     @classmethod
     def tearDownClass(self):
@@ -98,21 +139,9 @@ class FunctionalTest(unittest2.TestCase):
     def setUp(self):
         print "Running setUp"
         pprint(self)
-        #global GLANCE_DATA, NOVA_DATA, SWIFT_DATA, RABBITMQ_DATA, KEYSTONE_DATA, CONFIG_DATA
-        ## Define config dict
-        #self.config = CONFIG_DATA
-        ## Define service specific dicts
-        #self.glance = GLANCE_DATA
-        #self.nova = NOVA_DATA
-        #self.swift = SWIFT_DATA
-        #self.rabbitmq = RABBITMQ_DATA
-        #self.keystone = KEYSTONE_DATA
 
         # Define nova auth cache
         self.authcache = ".cache/nova.authcache"
-
-        self._parse_defaults_file()
-        # pprint(self.config)
 
         # Swift Setup
         if 'swift' in self.config:
@@ -130,21 +159,6 @@ class FunctionalTest(unittest2.TestCase):
         self.glance['port'] = self.config['glance']['port']
         if 'apiver' in self.config['glance']:
             self.glance['apiver'] = self.config['glance']['apiver']
-
-        if 'nova' in self.config:
-            self.nova['host'] = self.config['nova']['host']
-            self.nova['port'] = self.config['nova']['port']
-            self.nova['ver'] = self.config['nova']['apiver']
-            self.nova['user'] = self.config['nova']['user']
-            self.nova['key'] = self.config['nova']['key']
-
-        if 'keystone' in self.config:
-            self.keystone['host'] = self.config['keystone']['host']
-            self.keystone['port'] = self.config['keystone']['port']
-            self.keystone['apiver'] = self.config['keystone']['apiver']
-            self.keystone['user'] = self.config['keystone']['user']
-            self.keystone['pass'] = self.config['keystone']['password']
-
 
         self.nova['auth_path'] = self._gen_nova_auth_path()
         self.nova['path'] = self._gen_nova_path()
@@ -234,21 +248,3 @@ class FunctionalTest(unittest2.TestCase):
             else:
                 return
         file_data.close()
-
-    def _parse_defaults_file(self):
-        cfg = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                   "..", "etc", "config.ini"))
-        if os.path.exists(cfg):
-            self._build_config(cfg)
-        else:
-            raise Exception("Cannot read %s" % cfg)
-
-    def _build_config(self, config_file):
-        parser = ConfigParser.ConfigParser()
-        parser.read(config_file)
-
-        for section in parser.sections():
-            self.config[section] = {}
-            for value in parser.options(section):
-                self.config[section][value] = parser.get(section, value)
-                # print "%s = %s" % (value, parser.get(section, value))
