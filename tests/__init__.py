@@ -17,6 +17,7 @@
 
 import ConfigParser
 from hashlib import md5
+import httplib2
 import nose.plugins.skip
 import os
 from pprint import pprint
@@ -79,19 +80,39 @@ class skip_unless(object):
 
 
 class FunctionalTest(unittest2.TestCase):
+    @classmethod
+    def setUpClass(self):
+        print "Running setUpClass"
+        pprint(self)
+        self.config = {}
+        self.glance = {}
+        self.nova = {}
+        self.swift = {}
+        self.rabbitmq = {}
+        self.keystone = {}
+
+    @classmethod
+    def tearDownClass(self):
+        x = 1
+
     def setUp(self):
-        global GLANCE_DATA, NOVA_DATA, SWIFT_DATA, RABBITMQ_DATA, KEYSTONE_DATA, CONFIG_DATA
-        # Define config dict
-        self.config = CONFIG_DATA
-        # Define service specific dicts
-        self.glance = GLANCE_DATA
-        self.nova = NOVA_DATA
-        self.swift = SWIFT_DATA
-        self.rabbitmq = RABBITMQ_DATA
-        self.keystone = KEYSTONE_DATA
+        print "Running setUp"
+        pprint(self)
+        #global GLANCE_DATA, NOVA_DATA, SWIFT_DATA, RABBITMQ_DATA, KEYSTONE_DATA, CONFIG_DATA
+        ## Define config dict
+        #self.config = CONFIG_DATA
+        ## Define service specific dicts
+        #self.glance = GLANCE_DATA
+        #self.nova = NOVA_DATA
+        #self.swift = SWIFT_DATA
+        #self.rabbitmq = RABBITMQ_DATA
+        #self.keystone = KEYSTONE_DATA
+
+        # Define nova auth cache
+        self.authcache = ".cache/nova.authcache"
 
         self._parse_defaults_file()
-        pprint(self.config)
+        # pprint(self.config)
 
         # Swift Setup
         if 'swift' in self.config:
@@ -123,6 +144,78 @@ class FunctionalTest(unittest2.TestCase):
             self.keystone['apiver'] = self.config['keystone']['apiver']
             self.keystone['user'] = self.config['keystone']['user']
             self.keystone['pass'] = self.config['keystone']['password']
+
+
+        self.nova['auth_path'] = self._gen_nova_auth_path()
+        self.nova['path'] = self._gen_nova_path()
+
+        # setup nova auth token
+        token = self.get_auth_token()
+        self.nova['X-Auth-Token'] = token
+
+    def _gen_nova_path(self):
+        path = "http://%s:%s/%s" % (self.nova['host'],
+                                     self.nova['port'],
+                                     self.nova['ver'])
+        return path
+
+    def _gen_nova_auth_path(self):
+        if 'keystone' in self.config:
+            path = "http://%s:%s/%s" % (self.keystone['host'],
+                                       self.keystone['port'],
+                                       self.keystone['apiver'])
+        else:
+            path = "http://%s:%s/%s" % (self.nova['host'],
+                                        self.nova['port'],
+                                        self.nova['ver'])
+        return path
+
+    def get_auth_token(self):
+        token = self._get_token_from_cachefile()
+        if token == None or not self.valid_token(token):
+            token = self._generate_new_token()
+            self._cache_token(token)
+        return token
+
+    def _generate_new_token(self):
+        path = self.nova['auth_path']
+        if 'keystone' in self.config:
+            headers = {'X-Auth-User': self.keystone['user'],
+                       'X-Auth-Key': self.keystone['pass']}
+        else:
+            headers = {'X-Auth-User': self.nova['user'],
+                       'X-Auth-Key': self.nova['key']}
+        http = httplib2.Http()
+        response, content = http.request(path, 'HEAD', headers=headers)
+        if response.status == 204:
+            return response['x-auth-token']
+        else:
+            raise Error("Unable to get a valid token, please fix")
+
+    def valid_token(self, token):
+        path = self.nova['path'] + "/extensions"
+        headers = {'X-Auth-Token': token}
+        http = httplib2.Http()
+        response, content = http.request(path, 'GET', headers=headers)
+        if response.status == 200:
+            ret = True
+        else:
+            ret = False
+        return ret
+
+    def _cache_token(self, token):
+        f = open(self.authcache, 'w')
+        f.write(token)
+        f.close()
+
+    def _get_token_from_cachefile(self):
+        if os.path.exists(self.authcache):
+            f = open(self.authcache, 'r')
+            ret = f.read()
+            f.close()
+        else:
+          ret = None
+        return ret
 
     def _md5sum_file(self, path):
         md5sum = md5()
