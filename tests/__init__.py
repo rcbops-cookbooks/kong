@@ -103,6 +103,23 @@ class FunctionalTest(unittest2.TestCase):
                     self.config[section][value] = parser.get(section, value)
                     # print "%s = %s" % (value, parser.get(section, value))
 
+        def _gen_nova_path(self):
+            path = "http://%s:%s/%s" % (self.nova['host'],
+                                         self.nova['port'],
+                                         self.nova['ver'])
+            return path
+
+        def _gen_nova_auth_path(self):
+            if 'keystone' in self.config:
+                path = "http://%s:%s/%s" % (self.keystone['host'],
+                                           self.keystone['port'],
+                                           self.keystone['apiver'])
+            else:
+                path = "http://%s:%s/%s" % (self.nova['host'],
+                                            self.nova['port'],
+                                            self.nova['ver'])
+            return path
+
         def setupNova(self):
             ret_hash = {}
             ret_hash['host'] = self.config['nova']['host']
@@ -131,6 +148,10 @@ class FunctionalTest(unittest2.TestCase):
         if 'keystone' in self.config:
             self.keystone = setupKeystone(self)
 
+        # Setup nova path shortcuts
+        self.nova['auth_path'] = _gen_nova_auth_path(self)
+        self.nova['path'] = _gen_nova_path(self)
+
     @classmethod
     def tearDownClass(self):
         x = 1
@@ -157,29 +178,29 @@ class FunctionalTest(unittest2.TestCase):
         if 'apiver' in self.config['glance']:
             self.glance['apiver'] = self.config['glance']['apiver']
 
-        self.nova['auth_path'] = self._gen_nova_auth_path()
-        self.nova['path'] = self._gen_nova_path()
+        #self.nova['auth_path'] = self._gen_nova_auth_path()
+        #self.nova['path'] = self._gen_nova_path()
 
         # setup nova auth token
         token = self.get_auth_token()
         self.nova['X-Auth-Token'] = token
 
-    def _gen_nova_path(self):
-        path = "http://%s:%s/%s" % (self.nova['host'],
-                                     self.nova['port'],
-                                     self.nova['ver'])
-        return path
+    #def _gen_nova_path(self):
+    #    path = "http://%s:%s/%s" % (self.nova['host'],
+    #                                 self.nova['port'],
+    #                                 self.nova['ver'])
+    #    return path
 
-    def _gen_nova_auth_path(self):
-        if 'keystone' in self.config:
-            path = "http://%s:%s/%s" % (self.keystone['host'],
-                                       self.keystone['port'],
-                                       self.keystone['apiver'])
-        else:
-            path = "http://%s:%s/%s" % (self.nova['host'],
-                                        self.nova['port'],
-                                        self.nova['ver'])
-        return path
+    #def _gen_nova_auth_path(self):
+    #    if 'keystone' in self.config:
+    #        path = "http://%s:%s/%s" % (self.keystone['host'],
+    #                                   self.keystone['port'],
+    #                                   self.keystone['apiver'])
+    #    else:
+    #        path = "http://%s:%s/%s" % (self.nova['host'],
+    #                                    self.nova['port'],
+    #                                    self.nova['ver'])
+    #    return path
 
     def get_auth_token(self):
         token = self._get_token_from_cachefile()
