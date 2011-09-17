@@ -79,7 +79,7 @@ class TestNovaAPI(tests.FunctionalTest):
         data = json.loads(content)
         self.assertEqual(len(data['versions']), 2)
     test_102_verify_version_selection_json.tags = ['nova', 'nova-api']
- 
+
     @tests.skip_test("Currently Not Working")
     def test_103_verify_version_selection_xml(self):
         path = "http://%s:%s/.xml" % (self.nova['host'],

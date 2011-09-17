@@ -24,12 +24,10 @@ from pprint import pprint
 import unittest2
 from xmlrpclib import Server
 
-NOVA_DATA = {}
 GLANCE_DATA = {}
 SWIFT_DATA = {}
 RABBITMQ_DATA = {}
-CONFIG_DATA = {}
-KEYSTONE_DATA = {}
+
 
 class skip_test(object):
     """Decorator that skips a test."""
@@ -78,6 +76,7 @@ class skip_unless(object):
         _skipper.__doc__ = func.__doc__
         return _skipper
 
+
 class FunctionalTest(unittest2.TestCase):
     @classmethod
     def setUpClass(self):
@@ -90,7 +89,7 @@ class FunctionalTest(unittest2.TestCase):
             cfg = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                    "..", "etc", "config.ini"))
             if os.path.exists(cfg):
-                _build_config(self,cfg)
+                _build_config(self, cfg)
             else:
                 raise Exception("Cannot read %s" % cfg)
 
@@ -125,7 +124,7 @@ class FunctionalTest(unittest2.TestCase):
         # Parse the config file
         self.config = {}
         parse_config_file(self)
-        pprint(self.config)
+        # pprint(self.config)
 
         if 'nova' in self.config:
             self.nova = setupNova(self)
@@ -137,9 +136,6 @@ class FunctionalTest(unittest2.TestCase):
         x = 1
 
     def setUp(self):
-        print "Running setUp"
-        pprint(self)
-
         # Define nova auth cache
         self.authcache = ".cache/nova.authcache"
 
@@ -152,7 +148,8 @@ class FunctionalTest(unittest2.TestCase):
             self.swift['account'] = self.config['swift']['account']
             self.swift['username'] = self.config['swift']['username']
             self.swift['password'] = self.config['swift']['password']
-            self.swift['ver'] = 'v1.0'  # need to find a better way to get this.
+            # need to find a better way to get this.
+            self.swift['ver'] = 'v1.0'
 
         # Glance Setup
         self.glance['host'] = self.config['glance']['host']
@@ -228,7 +225,7 @@ class FunctionalTest(unittest2.TestCase):
             ret = f.read()
             f.close()
         else:
-          ret = None
+            ret = None
         return ret
 
     def _md5sum_file(self, path):
