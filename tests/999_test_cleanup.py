@@ -31,32 +31,6 @@ import tests
 
 
 class TestCleanUp(tests.FunctionalTest):
-    def test_995_delete_server(self):
-        path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
-                                               self.nova['port'],
-                                               self.nova['ver'],
-                                               self.nova['single_server_id'])
-        http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.nova['user']),
-                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
-        response, content = http.request(path, 'DELETE', headers=headers)
-        self.assertEqual(response.status, 202)
-    test_995_delete_server.tags = ['nova']
-
-    def test_996_delete_multi_server(self):
-        print "Deleting %s instances." % (len(self.nova['multi_server']))
-        for k, v in self.nova['multi_server'].iteritems():
-            path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
-                                                   self.nova['port'],
-                                                   self.nova['ver'],
-                                                   v)
-            http = httplib2.Http()
-            headers = {'X-Auth-User': '%s' % (self.nova['user']),
-                       'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
-            response, content = http.request(path, 'DELETE', headers=headers)
-            self.assertEqual(204, response.status)
-    test_996_delete_multi_server.tags = ['nova']
-
     def test_997_delete_kernel_from_glance(self):
         if 'apiver' in self.glance:
             path = "http://%s:%s/%s/images/%s" % (self.glance['host'],

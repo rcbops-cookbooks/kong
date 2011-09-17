@@ -213,10 +213,10 @@ class TestNovaSpinup(tests.FunctionalTest):
         self.assertEqual(response.status, 200)
     test_201_get_server_details.tags = ['nova']
 
-    # MOVING TO 999 because it can kill the API
+    # MOVING TO 900 because it can kill the API
     # Uncomment next line for testing
     # def create_multi(self):
-    def test_999_create_multiple(self):
+    def test_900_create_multiple(self):
         self.nova['multi_server'] = {}
         path = "http://%s:%s/%s/servers" % (self.nova['host'],
                                             self.nova['port'],
@@ -256,4 +256,30 @@ class TestNovaSpinup(tests.FunctionalTest):
         for k, v in self.nova['multi_server'].iteritems():
             build_result = self.build_check(v)
             self.assertEqual(build_result['ping'], True)
-    test_999_create_multiple.tags = ['nova']
+    test_900_create_multiple.tags = ['nova']
+
+    def test_995_delete_server(self):
+        path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
+                                               self.nova['port'],
+                                               self.nova['ver'],
+                                               self.nova['single_server_id'])
+        http = httplib2.Http()
+        headers = {'X-Auth-User': '%s' % (self.nova['user']),
+                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        response, content = http.request(path, 'DELETE', headers=headers)
+        self.assertEqual(response.status, 202)
+    test_995_delete_server.tags = ['nova']
+
+    def test_996_delete_multi_server(self):
+        print "Deleting %s instances." % (len(self.nova['multi_server']))
+        for k, v in self.nova['multi_server'].iteritems():
+            path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
+                                                   self.nova['port'],
+                                                   self.nova['ver'],
+                                                   v)
+            http = httplib2.Http()
+            headers = {'X-Auth-User': '%s' % (self.nova['user']),
+                       'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+            response, content = http.request(path, 'DELETE', headers=headers)
+            self.assertEqual(204, response.status)
+    test_996_delete_multi_server.tags = ['nova']
