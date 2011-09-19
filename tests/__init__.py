@@ -79,6 +79,7 @@ class FunctionalTest(unittest2.TestCase):
         # Setup project hashes
         self.rabbitmq = {}
 
+        #TODO: need to move this stuff out to util files
         def parse_config_file(self):
             cfg = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                    "..", "etc", "config.ini"))
