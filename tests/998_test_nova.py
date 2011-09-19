@@ -17,15 +17,14 @@
 
 """Functional test case against the OpenStack Nova API server"""
 
+import hashlib
+import httplib2
 import json
 import os
 import tempfile
 import unittest
-import httplib2
 import urllib
-import hashlib
 import time
-import os
 
 from pprint import pprint
 
@@ -81,6 +80,105 @@ class TestNovaSpinup(tests.FunctionalTest):
             self.result['ping'] = False
 
         return self.result
+
+    def test_002_upload_kernel_to_glance(self):
+        """
+        Uploads a test kernal to glance api
+        """
+        kernel = self.config['environment']['kernel']
+        if 'apiver' in self.glance:
+            path = "http://%s:%s/%s/images" % (self.glance['host'],
+                          self.glance['port'], self.glance['apiver'])
+        else:
+            path = "http://%s:%s/images" % (self.glance['host'],
+                                        self.glance['port'])
+        headers = {'x-image-meta-is-public': 'true',
+                   'x-image-meta-name': 'test-kernel',
+                   'x-image-meta-disk-format': 'aki',
+                   'x-image-meta-container-format': 'aki',
+                   'Content-Length': '%d' % os.path.getsize(kernel),
+                   'Content-Type': 'application/octet-stream'}
+        image_file = open(kernel, "rb")
+        http = httplib2.Http()
+        response, content = http.request(path, 'POST',
+                                         headers=headers,
+                                         body=image_file)
+        image_file.close()
+        self.assertEqual(201, response.status)
+        data = json.loads(content)
+        self.glance['kernel_id'] = data['image']['id']
+        self.assertEqual(data['image']['name'], "test-kernel")
+        self.assertEqual(data['image']['checksum'], self._md5sum_file(kernel))
+    test_002_upload_kernel_to_glance.tags = ['glance', 'nova']
+
+    def test_003_upload_initrd_to_glance(self):
+        """
+        Uploads a test initrd to glance api
+        """
+        initrd = self.config['environment']['initrd']
+        if 'apiver' in self.glance:
+            path = "http://%s:%s/%s/images" % (self.glance['host'],
+                          self.glance['port'], self.glance['apiver'])
+        else:
+            path = "http://%s:%s/images" % (self.glance['host'],
+                                        self.glance['port'])
+        headers = {'x-image-meta-is-public': 'true',
+                   'x-image-meta-name': 'test-ramdisk',
+                   'x-image-meta-disk-format': 'ari',
+                   'x-image-meta-container-format': 'ari',
+                   'Content-Length': '%d' % os.path.getsize(initrd),
+                   'Content-Type': 'application/octet-stream'}
+        image_file = open(initrd, "rb")
+        http = httplib2.Http()
+        response, content = http.request(path,
+                                         'POST',
+                                         headers=headers,
+                                         body=image_file)
+        image_file.close()
+        self.assertEqual(201, response.status)
+        data = json.loads(content)
+        self.glance['ramdisk_id'] = data['image']['id']
+        self.assertEqual(data['image']['name'], "test-ramdisk")
+        self.assertEqual(data['image']['checksum'], self._md5sum_file(initrd))
+    test_003_upload_initrd_to_glance.tags = ['glance', 'nova']
+
+    @tests.skip_test("--Skipping--")
+    def test_004_upload_image_to_glance(self):
+        """
+        Uploads a test image to glance api, and
+        links it to the initrd and kernel uploaded
+        earlier
+        """
+        image = self.config['environment']['image']
+        upload_data = ""
+        for chunk in self._read_in_chunks(image):
+            upload_data += chunk
+        if 'apiver' in self.glance:
+            path = "http://%s:%s/%s/images" % (self.glance['host'],
+                          self.glance['port'], self.glance['apiver'])
+        else:
+            path = "http://%s:%s/images" % (self.glance['host'],
+                                        self.glance['port'])
+        headers = {'x-image-meta-is-public': 'true',
+                   'x-image-meta-name': 'test-image',
+                   'x-image-meta-disk-format': 'ami',
+                   'x-image-meta-container-format': 'ami',
+                   'x-image-meta-property-Kernel_id': '%s' % \
+                       self.glance['kernel_id'],
+                   'x-image-meta-property-Ramdisk_id': '%s' % \
+                       self.glance['ramdisk_id'],
+                   'Content-Length': '%d' % os.path.getsize(image),
+                   'Content-Type': 'application/octet-stream'}
+        http = httplib2.Http()
+        response, content = http.request(path, 'POST',
+                                         headers=headers,
+                                         body=upload_data)
+        self.assertEqual(201, response.status)
+        data = json.loads(content)
+        self.glance['image_id'] = data['image']['id']
+        self.assertEqual(data['image']['name'], "test-image")
+        self.assertEqual(data['image']['checksum'], self._md5sum_file(image))
+    test_004_upload_image_to_glance.tags = ['glance', 'nova']
 
     #def test_002_verify_nova_auth(self):
     #    if 'keystone' in self.config:
@@ -285,3 +383,43 @@ class TestNovaSpinup(tests.FunctionalTest):
             response, content = http.request(path, 'DELETE', headers=headers)
             self.assertEqual(204, response.status)
     test_901_delete_multi_server.tags = ['nova']
+
+    def test_997_delete_kernel_from_glance(self):
+        if 'apiver' in self.glance:
+            path = "http://%s:%s/%s/images/%s" % (self.glance['host'],
+                          self.glance['port'], self.glance['apiver'],
+                          self.glance['kernel_id'])
+        else:
+            path = "http://%s:%s/images/%s" % (self.glance['host'],
+                          self.glance['port'], self.glance['kernel_id'])
+        http = httplib2.Http()
+        response, content = http.request(path, 'DELETE')
+        self.assertEqual(200, response.status)
+    test_997_delete_kernel_from_glance.tags = ['glance', 'nova']
+
+    def test_998_delete_initrd_from_glance(self):
+        if 'apiver' in self.glance:
+            path = "http://%s:%s/%s/images/%s" % (self.glance['host'],
+                          self.glance['port'], self.glance['apiver'],
+                          self.glance['ramdisk_id'])
+        else:
+            path = "http://%s:%s/images/%s" % (self.glance['host'],
+                          self.glance['port'], self.glance['ramdisk_id'])
+        http = httplib2.Http()
+        response, content = http.request(path, 'DELETE')
+        self.assertEqual(200, response.status)
+    test_998_delete_initrd_from_glance.tags = ['glance', 'nova']
+
+    @tests.skip_test("--Skipping--")
+    def test_999_delete_image_from_glance(self):
+        if 'apiver' in self.glance:
+            path = "http://%s:%s/%s/images/%s" % (self.glance['host'],
+                          self.glance['port'], self.glance['apiver'],
+                          self.glance['image_id'])
+        else:
+            path = "http://%s:%s/images/%s" % (self.glance['host'],
+                          self.glance['port'], self.glance['image_id'])
+        http = httplib2.Http()
+        response, content = http.request(path, 'DELETE')
+        self.assertEqual(200, response.status)
+    test_999_delete_image_from_glance.tags = ['glance', 'nova']
