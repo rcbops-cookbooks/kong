@@ -24,9 +24,9 @@ from pprint import pprint
 import unittest2
 from xmlrpclib import Server
 
-GLANCE_DATA = {}
-SWIFT_DATA = {}
-RABBITMQ_DATA = {}
+# GLANCE_DATA = {}
+# SWIFT_DATA = {}
+# RABBITMQ_DATA = {}
 
 
 class skip_test(object):
@@ -81,27 +81,26 @@ class FunctionalTest(unittest2.TestCase):
     @classmethod
     def setUpClass(self):
         # Setup project hashes
-        self.glance = {}
-        self.swift = {}
         self.rabbitmq = {}
 
         def parse_config_file(self):
             cfg = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                    "..", "etc", "config.ini"))
             if os.path.exists(cfg):
-                _build_config(self, cfg)
+                ret_hash = _build_config(self, cfg)
             else:
                 raise Exception("Cannot read %s" % cfg)
+            return ret_hash
 
         def _build_config(self, config_file):
             parser = ConfigParser.ConfigParser()
             parser.read(config_file)
-
+            ret_hash = {}
             for section in parser.sections():
-                self.config[section] = {}
+                ret_hash[section] = {}
                 for value in parser.options(section):
-                    self.config[section][value] = parser.get(section, value)
-                    # print "%s = %s" % (value, parser.get(section, value))
+                    ret_hash[section][value] = parser.get(section, value)
+            return ret_hash
 
         def _gen_nova_path(self):
             path = "http://%s:%s/%s" % (self.nova['host'],
@@ -119,6 +118,19 @@ class FunctionalTest(unittest2.TestCase):
                                             self.nova['port'],
                                             self.nova['ver'])
             return path
+
+        def setupSwift(self):
+            ret_hash = {}
+            ret_hash['auth_host'] = self.config['swift']['auth_host']
+            ret_hash['auth_port'] = self.config['swift']['auth_port']
+            ret_hash['auth_prefix'] = self.config['swift']['auth_prefix']
+            ret_hash['auth_ssl'] = self.config['swift']['auth_ssl']
+            ret_hash['account'] = self.config['swift']['account']
+            ret_hash['username'] = self.config['swift']['username']
+            ret_hash['password'] = self.config['swift']['password']
+            # need to find a better way to get this.
+            ret_hash['ver'] = 'v1.0'
+            return ret_hash
 
         def setupNova(self):
             ret_hash = {}
@@ -138,15 +150,25 @@ class FunctionalTest(unittest2.TestCase):
             ret_hash['pass'] = self.config['keystone']['password']
             return ret_hash
 
-        # Parse the config file
-        self.config = {}
-        parse_config_file(self)
-        # pprint(self.config)
+        def setupGlance(self):
+            ret_hash = {}
+            ret_hash['host'] = self.config['glance']['host']
+            ret_hash['port'] = self.config['glance']['port']
+            ret_hash['apiver'] = self.config['glance']['apiver']
+            return ret_hash
 
+        # Parse the config file
+        self.config = parse_config_file(self)
+        pprint(self.config)
+
+        if 'swift' in self.config:
+            self.swift = setupSwift(self)
         if 'nova' in self.config:
             self.nova = setupNova(self)
         if 'keystone' in self.config:
             self.keystone = setupKeystone(self)
+        if 'glance' in self.config:
+            self.glance = setupGlance(self)
 
         # Setup nova path shortcuts
         self.nova['auth_path'] = _gen_nova_auth_path(self)
@@ -154,53 +176,19 @@ class FunctionalTest(unittest2.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        x = 1
+        self.config = ""
+        self.nova = ""
+        self.keystone = ""
+        self.glance = ""
+        self.swift = ""
+        self.rabbitmq = ""
 
     def setUp(self):
         # Define nova auth cache
         self.authcache = ".cache/nova.authcache"
 
-        # Swift Setup
-        if 'swift' in self.config:
-            self.swift['auth_host'] = self.config['swift']['auth_host']
-            self.swift['auth_port'] = self.config['swift']['auth_port']
-            self.swift['auth_prefix'] = self.config['swift']['auth_prefix']
-            self.swift['auth_ssl'] = self.config['swift']['auth_ssl']
-            self.swift['account'] = self.config['swift']['account']
-            self.swift['username'] = self.config['swift']['username']
-            self.swift['password'] = self.config['swift']['password']
-            # need to find a better way to get this.
-            self.swift['ver'] = 'v1.0'
-
-        # Glance Setup
-        self.glance['host'] = self.config['glance']['host']
-        self.glance['port'] = self.config['glance']['port']
-        if 'apiver' in self.config['glance']:
-            self.glance['apiver'] = self.config['glance']['apiver']
-
-        #self.nova['auth_path'] = self._gen_nova_auth_path()
-        #self.nova['path'] = self._gen_nova_path()
-
         # setup nova auth token
-        token = self.get_auth_token()
-        self.nova['X-Auth-Token'] = token
-
-    #def _gen_nova_path(self):
-    #    path = "http://%s:%s/%s" % (self.nova['host'],
-    #                                 self.nova['port'],
-    #                                 self.nova['ver'])
-    #    return path
-
-    #def _gen_nova_auth_path(self):
-    #    if 'keystone' in self.config:
-    #        path = "http://%s:%s/%s" % (self.keystone['host'],
-    #                                   self.keystone['port'],
-    #                                   self.keystone['apiver'])
-    #    else:
-    #        path = "http://%s:%s/%s" % (self.nova['host'],
-    #                                    self.nova['port'],
-    #                                    self.nova['ver'])
-    #    return path
+        self.nova['X-Auth-Token'] = self.get_auth_token()
 
     def get_auth_token(self):
         token = self._get_token_from_cachefile()
