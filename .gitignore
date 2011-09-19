@@ -4,4 +4,7 @@ etc/config.ini
 include/swift_objects/swift_small
 include/swift_objects/swift_medium
 include/swift_objects/swift_large
+include/sample_vm/initrd.img-2.6.32-23-server
+include/sample_vm/ubuntu-lucid.img
+include/sample_vm/vmlinuz-2.6.32-23-server
 *.log

@@ -17,18 +17,13 @@
 
 import ConfigParser
 from hashlib import md5
+import httplib2
 import nose.plugins.skip
 import os
 from pprint import pprint
 import unittest2
-from xmlrpclib import Server
+# from xmlrpclib import Server
 
-NOVA_DATA = {}
-GLANCE_DATA = {}
-SWIFT_DATA = {}
-RABBITMQ_DATA = {}
-CONFIG_DATA = {}
-KEYSTONE_DATA = {}
 
 class skip_test(object):
     """Decorator that skips a test."""
@@ -79,50 +74,135 @@ class skip_unless(object):
 
 
 class FunctionalTest(unittest2.TestCase):
-    def setUp(self):
-        global GLANCE_DATA, NOVA_DATA, SWIFT_DATA, RABBITMQ_DATA, KEYSTONE_DATA, CONFIG_DATA
-        # Define config dict
-        self.config = CONFIG_DATA
-        # Define service specific dicts
-        self.glance = GLANCE_DATA
-        self.nova = NOVA_DATA
-        self.swift = SWIFT_DATA
-        self.rabbitmq = RABBITMQ_DATA
-        self.keystone = KEYSTONE_DATA
+    @classmethod
+    def setUpClass(self):
+        # Setup project hashes
+        self.rabbitmq = {}
 
-        self._parse_defaults_file()
-        pprint(self.config)
+        #TODO: need to move this stuff out to util files
+        def parse_config_file(self):
+            cfg = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                   "..", "etc", "config.ini"))
+            if os.path.exists(cfg):
+                ret_hash = _build_config(self, cfg)
+            else:
+                raise Exception("Cannot read %s" % cfg)
+            return ret_hash
 
-        # Swift Setup
+        def _build_config(self, config_file):
+            parser = ConfigParser.ConfigParser()
+            parser.read(config_file)
+            ret_hash = {}
+            for section in parser.sections():
+                ret_hash[section] = {}
+                for value in parser.options(section):
+                    ret_hash[section][value] = parser.get(section, value)
+            return ret_hash
+
+        def _generate_auth_token(self):
+            path = self.nova['auth_path']
+            if 'keystone' in self.config:
+                headers = {'X-Auth-User': self.keystone['user'],
+                           'X-Auth-Key': self.keystone['pass']}
+            else:
+                headers = {'X-Auth-User': self.nova['user'],
+                           'X-Auth-Key': self.nova['key']}
+            http = httplib2.Http()
+            response, content = http.request(path, 'HEAD', headers=headers)
+            if response.status == 204:
+                return response['x-auth-token']
+            else:
+                raise Exception("Unable to get a valid token, please fix")
+
+        def _gen_nova_path(self):
+            path = "http://%s:%s/%s" % (self.nova['host'],
+                                         self.nova['port'],
+                                         self.nova['ver'])
+            return path
+
+        def _gen_nova_auth_path(self):
+            if 'keystone' in self.config:
+                path = "http://%s:%s/%s" % (self.keystone['host'],
+                                           self.keystone['port'],
+                                           self.keystone['apiver'])
+            else:
+                path = "http://%s:%s/%s" % (self.nova['host'],
+                                            self.nova['port'],
+                                            self.nova['ver'])
+            return path
+
+        def setupSwift(self):
+            ret_hash = {}
+            ret_hash['auth_host'] = self.config['swift']['auth_host']
+            ret_hash['auth_port'] = self.config['swift']['auth_port']
+            ret_hash['auth_prefix'] = self.config['swift']['auth_prefix']
+            ret_hash['auth_ssl'] = self.config['swift']['auth_ssl']
+            ret_hash['account'] = self.config['swift']['account']
+            ret_hash['username'] = self.config['swift']['username']
+            ret_hash['password'] = self.config['swift']['password']
+            # need to find a better way to get this.
+            ret_hash['ver'] = 'v1.0'
+            return ret_hash
+
+        def setupNova(self):
+            ret_hash = {}
+            ret_hash['host'] = self.config['nova']['host']
+            ret_hash['port'] = self.config['nova']['port']
+            ret_hash['ver'] = self.config['nova']['apiver']
+            ret_hash['user'] = self.config['nova']['user']
+            ret_hash['key'] = self.config['nova']['key']
+            return ret_hash
+
+        def setupKeystone(self):
+            ret_hash = {}
+            ret_hash['host'] = self.config['keystone']['host']
+            ret_hash['port'] = self.config['keystone']['port']
+            ret_hash['apiver'] = self.config['keystone']['apiver']
+            ret_hash['user'] = self.config['keystone']['user']
+            ret_hash['pass'] = self.config['keystone']['password']
+            return ret_hash
+
+        def setupGlance(self):
+            ret_hash = {}
+            ret_hash['host'] = self.config['glance']['host']
+            ret_hash['port'] = self.config['glance']['port']
+            ret_hash['apiver'] = self.config['glance']['apiver']
+            return ret_hash
+
+        # Parse the config file
+        self.config = parse_config_file(self)
+        # pprint(self.config)
+
         if 'swift' in self.config:
-            self.swift['auth_host'] = self.config['swift']['auth_host']
-            self.swift['auth_port'] = self.config['swift']['auth_port']
-            self.swift['auth_prefix'] = self.config['swift']['auth_prefix']
-            self.swift['auth_ssl'] = self.config['swift']['auth_ssl']
-            self.swift['account'] = self.config['swift']['account']
-            self.swift['username'] = self.config['swift']['username']
-            self.swift['password'] = self.config['swift']['password']
-            self.swift['ver'] = 'v1.0'  # need to find a better way to get this.
-
-        # Glance Setup
-        self.glance['host'] = self.config['glance']['host']
-        self.glance['port'] = self.config['glance']['port']
-        if 'apiver' in self.config['glance']:
-            self.glance['apiver'] = self.config['glance']['apiver']
-
+            self.swift = setupSwift(self)
         if 'nova' in self.config:
-            self.nova['host'] = self.config['nova']['host']
-            self.nova['port'] = self.config['nova']['port']
-            self.nova['ver'] = self.config['nova']['apiver']
-            self.nova['user'] = self.config['nova']['user']
-            self.nova['key'] = self.config['nova']['key']
-
+            self.nova = setupNova(self)
         if 'keystone' in self.config:
-            self.keystone['host'] = self.config['keystone']['host']
-            self.keystone['port'] = self.config['keystone']['port']
-            self.keystone['apiver'] = self.config['keystone']['apiver']
-            self.keystone['user'] = self.config['keystone']['user']
-            self.keystone['pass'] = self.config['keystone']['password']
+            self.keystone = setupKeystone(self)
+        if 'glance' in self.config:
+            self.glance = setupGlance(self)
+
+        # Setup nova path shortcuts
+        self.nova['auth_path'] = _gen_nova_auth_path(self)
+        self.nova['path'] = _gen_nova_path(self)
+        # setup nova auth token
+        self.nova['X-Auth-Token'] = _generate_auth_token(self)
+
+    @classmethod
+    def tearDownClass(self):
+        self.config = ""
+        self.nova = ""
+        self.keystone = ""
+        self.glance = ""
+        self.swift = ""
+        self.rabbitmq = ""
+
+    def setUp(self):
+        # Define nova auth cache
+        self.authcache = ".cache/nova.authcache"
+
+        # setup nova auth token
+        # self.nova['X-Auth-Token'] = self.get_auth_token()
 
     def _md5sum_file(self, path):
         md5sum = md5()
@@ -141,21 +221,3 @@ class FunctionalTest(unittest2.TestCase):
             else:
                 return
         file_data.close()
-
-    def _parse_defaults_file(self):
-        cfg = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                   "..", "etc", "config.ini"))
-        if os.path.exists(cfg):
-            self._build_config(cfg)
-        else:
-            raise Exception("Cannot read %s" % cfg)
-
-    def _build_config(self, config_file):
-        parser = ConfigParser.ConfigParser()
-        parser.read(config_file)
-
-        for section in parser.sections():
-            self.config[section] = {}
-            for value in parser.options(section):
-                self.config[section][value] = parser.get(section, value)
-                # print "%s = %s" % (value, parser.get(section, value))
