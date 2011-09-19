@@ -223,7 +223,7 @@ class TestNovaSpinup(tests.FunctionalTest):
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'DELETE', headers=headers)
         self.assertEqual(response.status, 202)
-    test_202.tags = ['nova']
+    test_202_delete_server.tags = ['nova']
 
     # MOVING TO 900 because it can kill the API
     # Uncomment next line for testing
@@ -284,4 +284,4 @@ class TestNovaSpinup(tests.FunctionalTest):
                        'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
             response, content = http.request(path, 'DELETE', headers=headers)
             self.assertEqual(204, response.status)
-    test_901.tags = ['nova']
+    test_901_delete_multi_server.tags = ['nova']
