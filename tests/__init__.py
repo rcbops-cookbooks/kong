@@ -22,11 +22,7 @@ import nose.plugins.skip
 import os
 from pprint import pprint
 import unittest2
-from xmlrpclib import Server
-
-# GLANCE_DATA = {}
-# SWIFT_DATA = {}
-# RABBITMQ_DATA = {}
+# from xmlrpclib import Server
 
 
 class skip_test(object):
@@ -102,6 +98,21 @@ class FunctionalTest(unittest2.TestCase):
                     ret_hash[section][value] = parser.get(section, value)
             return ret_hash
 
+        def _generate_auth_token(self):
+            path = self.nova['auth_path']
+            if 'keystone' in self.config:
+                headers = {'X-Auth-User': self.keystone['user'],
+                           'X-Auth-Key': self.keystone['pass']}
+            else:
+                headers = {'X-Auth-User': self.nova['user'],
+                           'X-Auth-Key': self.nova['key']}
+            http = httplib2.Http()
+            response, content = http.request(path, 'HEAD', headers=headers)
+            if response.status == 204:
+                return response['x-auth-token']
+            else:
+                raise Exception("Unable to get a valid token, please fix")
+
         def _gen_nova_path(self):
             path = "http://%s:%s/%s" % (self.nova['host'],
                                          self.nova['port'],
@@ -159,7 +170,7 @@ class FunctionalTest(unittest2.TestCase):
 
         # Parse the config file
         self.config = parse_config_file(self)
-        pprint(self.config)
+        # pprint(self.config)
 
         if 'swift' in self.config:
             self.swift = setupSwift(self)
@@ -173,6 +184,8 @@ class FunctionalTest(unittest2.TestCase):
         # Setup nova path shortcuts
         self.nova['auth_path'] = _gen_nova_auth_path(self)
         self.nova['path'] = _gen_nova_path(self)
+        # setup nova auth token
+        self.nova['X-Auth-Token'] = _generate_auth_token(self)
 
     @classmethod
     def tearDownClass(self):
@@ -188,54 +201,7 @@ class FunctionalTest(unittest2.TestCase):
         self.authcache = ".cache/nova.authcache"
 
         # setup nova auth token
-        self.nova['X-Auth-Token'] = self.get_auth_token()
-
-    def get_auth_token(self):
-        token = self._get_token_from_cachefile()
-        if token == None or not self.valid_token(token):
-            token = self._generate_new_token()
-            self._cache_token(token)
-        return token
-
-    def _generate_new_token(self):
-        path = self.nova['auth_path']
-        if 'keystone' in self.config:
-            headers = {'X-Auth-User': self.keystone['user'],
-                       'X-Auth-Key': self.keystone['pass']}
-        else:
-            headers = {'X-Auth-User': self.nova['user'],
-                       'X-Auth-Key': self.nova['key']}
-        http = httplib2.Http()
-        response, content = http.request(path, 'HEAD', headers=headers)
-        if response.status == 204:
-            return response['x-auth-token']
-        else:
-            raise Error("Unable to get a valid token, please fix")
-
-    def valid_token(self, token):
-        path = self.nova['path'] + "/extensions"
-        headers = {'X-Auth-Token': token}
-        http = httplib2.Http()
-        response, content = http.request(path, 'GET', headers=headers)
-        if response.status == 200:
-            ret = True
-        else:
-            ret = False
-        return ret
-
-    def _cache_token(self, token):
-        f = open(self.authcache, 'w')
-        f.write(token)
-        f.close()
-
-    def _get_token_from_cachefile(self):
-        if os.path.exists(self.authcache):
-            f = open(self.authcache, 'r')
-            ret = f.read()
-            f.close()
-        else:
-            ret = None
-        return ret
+        # self.nova['X-Auth-Token'] = self.get_auth_token()
 
     def _md5sum_file(self, path):
         md5sum = md5()
