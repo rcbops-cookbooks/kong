@@ -27,14 +27,12 @@ import hashlib
 import time
 import os
 
-from pprint import pprint
-
 import tests
 
 
 class TestNovaAPI(tests.FunctionalTest):
     def test_101_verify_version_selection_default(self):
-        #path = self.nova['auth_path'] 
+        #path = self.nova['auth_path']
         path = "http://%s:%s/" % (self.nova['host'],
                                            self.nova['port'])
         http = httplib2.Http()
@@ -69,7 +67,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_103_verify_version_selection_xml.tags = ['nova', 'nova-api']
 
     def test_104_bad_user_bad_key(self):
-        path = self.nova['auth_path'] 
+        path = self.nova['auth_path']
         http = httplib2.Http()
         headers = {'X-Auth-User': 'unknown_auth_user',
                   'X-Auth-Key': 'unknown_auth_key'}
@@ -78,7 +76,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_104_bad_user_bad_key.tags = ['nova', 'nova-api']
 
     def test_105_bad_user_good_key(self):
-        path = self.nova['auth_path'] 
+        path = self.nova['auth_path']
         http = httplib2.Http()
         headers = {'X-Auth-User': 'unknown_auth_user',
                   'X-Auth-Key': self.nova['key']}
@@ -87,7 +85,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_105_bad_user_good_key.tags = ['nova', 'nova-api']
 
     def test_106_good_user_bad_key(self):
-        path = self.nova['auth_path'] 
+        path = self.nova['auth_path']
         http = httplib2.Http()
         headers = {'X-Auth-User': self.nova['user'],
                   'X-Auth-Key': 'unknown_auth_key'}
@@ -96,7 +94,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_106_good_user_bad_key.tags = ['nova', 'nova-api']
 
     def test_107_no_key(self):
-        path = self.nova['auth_path'] 
+        path = self.nova['auth_path']
         http = httplib2.Http()
         headers = {'X-Auth-User': self.nova['user']}
         response, content = http.request(path, 'GET', headers=headers)
@@ -104,7 +102,7 @@ class TestNovaAPI(tests.FunctionalTest):
     test_107_no_key.tags = ['nova', 'nova-api']
 
     def test_108_bad_token(self):
-        path = self.nova['auth_path'] 
+        path = self.nova['auth_path']
         http = httplib2.Http()
         headers = {'X-Auth-Token': 'unknown_token'}
         response, content = http.request(path, 'GET', headers=headers)
