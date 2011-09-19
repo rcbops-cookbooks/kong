@@ -198,11 +198,7 @@ class FunctionalTest(unittest2.TestCase):
         self.rabbitmq = ""
 
     def setUp(self):
-        # Define nova auth cache
-        self.authcache = ".cache/nova.authcache"
-
-        # setup nova auth token
-        # self.nova['X-Auth-Token'] = self.get_auth_token()
+        x = 1
 
     def _md5sum_file(self, path):
         md5sum = md5()
