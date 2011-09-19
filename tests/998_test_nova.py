@@ -142,7 +142,6 @@ class TestNovaSpinup(tests.FunctionalTest):
         self.assertEqual(data['image']['checksum'], self._md5sum_file(initrd))
     test_003_upload_initrd_to_glance.tags = ['glance', 'nova']
 
-    @tests.skip_test("--Skipping--")
     def test_004_upload_image_to_glance(self):
         """
         Uploads a test image to glance api, and
@@ -410,7 +409,6 @@ class TestNovaSpinup(tests.FunctionalTest):
         self.assertEqual(200, response.status)
     test_998_delete_initrd_from_glance.tags = ['glance', 'nova']
 
-    @tests.skip_test("--Skipping--")
     def test_999_delete_image_from_glance(self):
         if 'apiver' in self.glance:
             path = "http://%s:%s/%s/images/%s" % (self.glance['host'],
