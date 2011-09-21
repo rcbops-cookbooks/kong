@@ -211,6 +211,8 @@ class TestNovaSpinup(tests.FunctionalTest):
                                               self.nova['port'],
                                               self.nova['ver'],
                                               self.glance['kernel_id'])
+        pprint(self.nova)
+        pprint(path)
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
