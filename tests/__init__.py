@@ -22,6 +22,8 @@ import nose.plugins.skip
 import os
 from pprint import pprint
 import unittest2
+import urlparse
+import json
 # from xmlrpclib import Server
 
 
@@ -102,15 +104,38 @@ class FunctionalTest(unittest2.TestCase):
         def _generate_auth_token(self):
             path = self.nova['auth_path']
             if 'keystone' in self.config:
-                headers = {'X-Auth-User': self.keystone['user'],
-                           'X-Auth-Key': self.keystone['pass']}
+                 if self.keystone['apiver'] == "v1.0":
+                     headers = {'X-Auth-User': self.keystone['user'],
+                                'X-Auth-Key': self.keystone['pass']}
+                 if self.keystone['apiver'] == "v2.0":
+                     body = {"passwordCredentials": {"username": self.keystone['user'],
+                                                     "password": self.keystone['pass']}}
+                     if self.keystone['tenantid']:
+                          body['passwordCredentials']['tenantId'] = self.keystone['tenantid']
+                     else:
+                          raise Exception("tenantId is required for Keystone auth service v2.0")
+               
             else:
                 headers = {'X-Auth-User': self.nova['user'],
                            'X-Auth-Key': self.nova['key']}
             http = httplib2.Http()
-            response, content = http.request(path, 'HEAD', headers=headers)
-            if response.status == 204:
-                return response['x-auth-token']
+            if self.keystone['apiver'] == "v2.0":
+                 post_path = urlparse.urljoin(path, "tokens")
+                 post_data = json.dumps(body)
+                 response, content = http.request(post_path, 'POST', 
+                                                  post_data,
+                                                  headers={'Content-Type': 'application/json'})
+            else:
+                 response, content = http.request(path, 'HEAD', headers=headers)
+
+             
+            if response.status == 200:
+                ### Decode keystone v2 json response
+                if self.keystone['apiver'] == "v2.0":
+                     decode = json.loads(content)
+                     return decode['auth']['token']['id']
+                else:
+                     return response['X-Auth-Token']
             else:
                 raise Exception("Unable to get a valid token, please fix")
 
@@ -123,8 +148,8 @@ class FunctionalTest(unittest2.TestCase):
         def _gen_nova_auth_path(self):
             if 'keystone' in self.config:
                 path = "http://%s:%s/%s" % (self.keystone['host'],
-                                           self.keystone['port'],
-                                           self.keystone['apiver'])
+                                                self.keystone['port'],
+                                                self.keystone['apiver'])
             else:
                 path = "http://%s:%s/%s" % (self.nova['host'],
                                             self.nova['port'],
@@ -149,8 +174,9 @@ class FunctionalTest(unittest2.TestCase):
             ret_hash['host'] = self.config['nova']['host']
             ret_hash['port'] = self.config['nova']['port']
             ret_hash['ver'] = self.config['nova']['apiver']
-            ret_hash['user'] = self.config['nova']['user']
-            ret_hash['key'] = self.config['nova']['key']
+            if not self.config['keystone']:
+                 ret_hash['user'] = self.config['nova']['user']
+                 ret_hash['key'] = self.config['nova']['key']
             return ret_hash
 
         def setupKeystone(self):
@@ -160,6 +186,7 @@ class FunctionalTest(unittest2.TestCase):
             ret_hash['apiver'] = self.config['keystone']['apiver']
             ret_hash['user'] = self.config['keystone']['user']
             ret_hash['pass'] = self.config['keystone']['password']
+            ret_hash['tenantid'] = self.config['keystone']['tenantid']
             return ret_hash
 
         def setupGlance(self):

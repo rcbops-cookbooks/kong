@@ -29,9 +29,10 @@ apiver = v1.1
 user = admin
 key = 24BD8F71-6AD8-439D-B722-7E2E25FD1911
 
-[keystone]
-host = 10.0.0.100
-port = 5000
-apiver = v1.1
-user = admin
-password = password
+## Uncomment the following to test keystone auth.
+# [keystone]
+# host = 10.0.0.100
+# port = 5000
+# apiver = v1.1
+# user = admin
+# password = password
