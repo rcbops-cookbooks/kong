@@ -73,7 +73,6 @@ class TestNovaAPI(tests.FunctionalTest):
         headers = {'X-Auth-User': 'unknown_auth_user',
                   'X-Auth-Key': 'unknown_auth_key'}
         response, content = http.request(path, 'GET', headers=headers)
-        pprint(content)
         self.assertEqual(response.status, 401)
     test_104_bad_user_bad_key.tags = ['nova', 'nova-api']
 
