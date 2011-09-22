@@ -156,6 +156,12 @@ class FunctionalTest(unittest2.TestCase):
                                             self.nova['ver'])
             return path
 
+        def _gen_keystone_admin_path(self):
+            path = "http://%s:%s/%s" % (self.keystone['host'],
+                                        self.keystone['admin_port'],
+                                        self.keystone['apiver'])
+            return path
+
         def setupSwift(self):
             ret_hash = {}
             ret_hash['auth_host'] = self.config['swift']['auth_host']
@@ -173,6 +179,7 @@ class FunctionalTest(unittest2.TestCase):
             ret_hash = {}
             ret_hash['host'] = self.config['keystone']['host']
             ret_hash['port'] = self.config['keystone']['port']
+            ret_hash['admin_port'] = self.config['keystone']['admin_port']
             ret_hash['apiver'] = self.config['keystone']['apiver']
             ret_hash['user'] = self.config['keystone']['user']
             ret_hash['pass'] = self.config['keystone']['password']
@@ -213,6 +220,7 @@ class FunctionalTest(unittest2.TestCase):
             self.glance = setupGlance(self)
 
         # Setup nova path shortcuts
+        self.keystone['admin_path'] = _gen_keystone_admin_path(self)
         self.nova['auth_path'] = _gen_nova_auth_path(self)
         self.nova['path'] = _gen_nova_path(self)
         # setup nova auth token

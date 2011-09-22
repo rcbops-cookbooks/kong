@@ -178,7 +178,7 @@ class TestNovaAPI(tests.FunctionalTest):
     @tests.skip_test("Currently Not Working")
     def test_110_get_tenant_list(self):
         if self.keystone['apiver'] == "v2.0":
-            path = "http://" + self.keystone['host'] + ":5001/tenants"
+            path = self.keystone['admin_path'] + "/tenants"
             pprint(path)
             http = httplib2.Http()
             body = self._keystone_json(self.keystone['user'],
