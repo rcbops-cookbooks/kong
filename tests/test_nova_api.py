@@ -78,7 +78,7 @@ class TestNovaAPI(tests.FunctionalTest):
             body = self._keystone_json('unknown_auth_user',
                                        'unknown_auth_key',
                                        self.keystone['tenantid'])
-            response, content = http.request(path, 
+            response, content = http.request(path,
                                              'POST',
                                              body,
                                              headers={'Content-Type': 'application/json'})
@@ -97,7 +97,7 @@ class TestNovaAPI(tests.FunctionalTest):
             body = self._keystone_json('unknown_auth_user',
                                        self.keystone['pass'],
                                        self.keystone['tenantid'])
-            response, content = http.request(path, 
+            response, content = http.request(path,
                                              'POST',
                                              body,
                                              headers={'Content-Type': 'application/json'})

@@ -255,7 +255,7 @@ class FunctionalTest(unittest2.TestCase):
             else:
                 return
         file_data.close()
-    
+
     def _keystone_json(self, user, passwd, tenantid):
         build = {"passwordCredentials": {
                             "username": user,
@@ -263,5 +263,5 @@ class FunctionalTest(unittest2.TestCase):
         if tenantid:
             build['passwordCredentials']['tenantId'] = tenantid
         else:
-           raise Exception("tenantId is required for Keystone auth service v2.0")
+            raise Exception("tenantId is required for Keystone auth service v2.0")
         return json.dumps(build)
