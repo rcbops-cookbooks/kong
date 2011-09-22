@@ -185,7 +185,10 @@ class FunctionalTest(unittest2.TestCase):
             ret_hash['host'] = self.config['nova']['host']
             ret_hash['port'] = self.config['nova']['port']
             ret_hash['ver'] = self.config['nova']['apiver']
-            if not self.config['keystone']:
+            if self.keystone['user']:
+                 ret_hash['user'] = self.keystone['user']
+                 ret_hash['key'] = self.keystone['pass']
+            else:
                  ret_hash['user'] = self.config['nova']['user']
                  ret_hash['key'] = self.config['nova']['key']
             return ret_hash
@@ -203,10 +206,10 @@ class FunctionalTest(unittest2.TestCase):
 
         if 'swift' in self.config:
             self.swift = setupSwift(self)
-        if 'nova' in self.config:
-            self.nova = setupNova(self)
         if 'keystone' in self.config:
             self.keystone = setupKeystone(self)
+        if 'nova' in self.config:
+            self.nova = setupNova(self)
         if 'glance' in self.config:
             self.glance = setupGlance(self)
 
