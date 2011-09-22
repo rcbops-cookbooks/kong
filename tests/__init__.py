@@ -133,6 +133,7 @@ class FunctionalTest(unittest2.TestCase):
                 ### Decode keystone v2 json response
                 if self.keystone['apiver'] == "v2.0":
                      decode = json.loads(content)
+                     self.keystone['serviceCatalog'] = decode['auth']['serviceCatalog']
                      return decode['auth']['token']['id'].encode('utf-8')
                 else:
                      return response['X-Auth-Token']
@@ -169,15 +170,6 @@ class FunctionalTest(unittest2.TestCase):
             ret_hash['ver'] = 'v1.0'
             return ret_hash
 
-        def setupNova(self):
-            ret_hash = {}
-            ret_hash['host'] = self.config['nova']['host']
-            ret_hash['port'] = self.config['nova']['port']
-            ret_hash['ver'] = self.config['nova']['apiver']
-            ret_hash['user'] = self.config['nova']['user']
-            ret_hash['key'] = self.config['nova']['key']
-            return ret_hash
-
         def setupKeystone(self):
             ret_hash = {}
             ret_hash['host'] = self.config['keystone']['host']
@@ -186,6 +178,16 @@ class FunctionalTest(unittest2.TestCase):
             ret_hash['user'] = self.config['keystone']['user']
             ret_hash['pass'] = self.config['keystone']['password']
             ret_hash['tenantid'] = self.config['keystone']['tenantid']
+            return ret_hash
+
+        def setupNova(self):
+            ret_hash = {}
+            ret_hash['host'] = self.config['nova']['host']
+            ret_hash['port'] = self.config['nova']['port']
+            ret_hash['ver'] = self.config['nova']['apiver']
+            if not self.config['keystone']:
+                 ret_hash['user'] = self.config['nova']['user']
+                 ret_hash['key'] = self.config['nova']['key']
             return ret_hash
 
         def setupGlance(self):
