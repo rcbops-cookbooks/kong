@@ -104,39 +104,39 @@ class FunctionalTest(unittest2.TestCase):
         def _generate_auth_token(self):
             path = self.nova['auth_path']
             if 'keystone' in self.config:
-                 if self.keystone['apiver'] == "v1.0":
-                     headers = {'X-Auth-User': self.keystone['user'],
+                if self.keystone['apiver'] == "v1.0":
+                    headers = {'X-Auth-User': self.keystone['user'],
                                 'X-Auth-Key': self.keystone['pass']}
-                 if self.keystone['apiver'] == "v2.0":
-                     body = {"passwordCredentials": {"username": self.keystone['user'],
-                                                     "password": self.keystone['pass']}}
-                     if self.keystone['tenantid']:
-                          body['passwordCredentials']['tenantId'] = self.keystone['tenantid']
-                     else:
-                          raise Exception("tenantId is required for Keystone auth service v2.0")
-               
+                if self.keystone['apiver'] == "v2.0":
+                    body = {"passwordCredentials": {
+                                          "username": self.keystone['user'],
+                                          "password": self.keystone['pass']}}
+                    if self.keystone['tenantid']:
+                        body['passwordCredentials']['tenantId'] =
+                        self.keystone['tenantid']
+                    else:
+                        raise Exception(
+                        "tenantId is required for Keystone auth service v2.0")
             else:
                 headers = {'X-Auth-User': self.nova['user'],
                            'X-Auth-Key': self.nova['key']}
             http = httplib2.Http()
             if self.keystone['apiver'] == "v2.0":
-                 post_path = urlparse.urljoin(path, "tokens")
-                 post_data = json.dumps(body)
-                 response, content = http.request(post_path, 'POST', 
-                                                  post_data,
-                                                  headers={'Content-Type': 'application/json'})
+                post_path = urlparse.urljoin(path, "tokens")
+                post_data = json.dumps(body)
+                response, content = http.request(post_path, 'POST',
+                                 post_data,
+                                 headers={'Content-Type': 'application/json'})
             else:
-                 response, content = http.request(path, 'HEAD', headers=headers)
-
-             
+                response, content = http.request(path, 'HEAD', headers=headers)
             if response.status == 200:
                 ### Decode keystone v2 json response
                 if self.keystone['apiver'] == "v2.0":
-                     decode = json.loads(content)
-                     self.keystone['serviceCatalog'] = decode['auth']['serviceCatalog']
-                     return decode['auth']['token']['id'].encode('utf-8')
+                    decode = json.loads(content)
+                    self.keystone['catalog'] = decode['auth']['serviceCatalog']
+                    return decode['auth']['token']['id'].encode('utf-8')
                 else:
-                     return response['X-Auth-Token']
+                    return response['X-Auth-Token']
             else:
                 raise Exception("Unable to get a valid token, please fix")
 
@@ -186,11 +186,11 @@ class FunctionalTest(unittest2.TestCase):
             ret_hash['port'] = self.config['nova']['port']
             ret_hash['ver'] = self.config['nova']['apiver']
             if self.keystone['user']:
-                 ret_hash['user'] = self.keystone['user']
-                 ret_hash['key'] = self.keystone['pass']
+                ret_hash['user'] = self.keystone['user']
+                ret_hash['key'] = self.keystone['pass']
             else:
-                 ret_hash['user'] = self.config['nova']['user']
-                 ret_hash['key'] = self.config['nova']['key']
+                ret_hash['user'] = self.config['nova']['user']
+                ret_hash['key'] = self.config['nova']['key']
             return ret_hash
 
         def setupGlance(self):

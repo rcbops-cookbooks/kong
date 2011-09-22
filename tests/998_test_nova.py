@@ -275,13 +275,13 @@ class TestNovaSpinup(tests.FunctionalTest):
                 "flavorRef": "http://%s:%s/%s/flavors/2" % (self.nova['host'],
                                                       self.nova['port'],
                                                       self.nova['ver']),
-                "imageRef": self.glance['image_id']
+                "imageRef": self.glance['image_id']}}
 #                "imageRef": "http://%s:%s/%s/images/%s" % (self.nova['host'],
 #                                                      self.nova['port'],
 #                                                      self.nova['ver'],
 #                                                      self.glance['image_id'])
-            }
-        }
+#           }
+#       }
         data = json.dumps(json_str)
         response, content = http.request(path, 'POST', headers=headers,
                                          body=data)
@@ -345,14 +345,14 @@ class TestNovaSpinup(tests.FunctionalTest):
                                                    self.nova['host'],
                                                    self.nova['port'],
                                                    self.nova['ver']),
-                    "imageRef": self.glance['image_id']
+                    "imageRef": self.glance['image_id']}}
 #                    "imageRef": "http://%s:%s/%s/images/%s" % (
 #                                                   self.nova['host'],
 #                                                   self.nova['port'],
 #                                                   self.nova['ver'],
 #                                                   self.glance['image_id'])
-                }
-            }
+#                }
+            #}
             data = json.dumps(json_str)
             response, content = http.request(path, 'POST', headers=headers,
                                              body=data)
