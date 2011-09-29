@@ -107,7 +107,7 @@ class FunctionalTest(unittest2.TestCase):
                 if self.keystone['apiver'] == "v1.0":
                     headers = {'X-Auth-User': self.keystone['user'],
                                 'X-Auth-Key': self.keystone['pass']}
-                if self.keystone['apiver'] == "v2.0":
+                elif self.keystone['apiver'] == "v2.0":
                     body = {"passwordCredentials": {
                                           "username": self.keystone['user'],
                                           "password": self.keystone['pass']}}
@@ -116,6 +116,8 @@ class FunctionalTest(unittest2.TestCase):
                     else:
                         raise Exception(
                         "tenantId is required for Keystone auth service v2.0")
+                else:
+                    raise Exception("Unknown apiver, please use either 'v1.0' or 'v2.0'")
             else:
                 headers = {'X-Auth-User': self.nova['user'],
                            'X-Auth-Key': self.nova['key']}
@@ -128,6 +130,7 @@ class FunctionalTest(unittest2.TestCase):
                                  headers={'Content-Type': 'application/json'})
             else:
                 response, content = http.request(path, 'HEAD', headers=headers)
+            # TODO: keystone v1.0, supplies a 204 as a successful auth
             if response.status == 200:
                 ### Decode keystone v2 json response
                 if self.keystone['apiver'] == "v2.0":
