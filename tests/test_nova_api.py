@@ -210,3 +210,14 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 200)
         self.assertNotEqual(content, '{"flavors": []}')
     test_202_list_flavors_v1_1.tags = ['nova', 'nova-api']
+    
+    def test_203_verify_extensions_v1_1(self):
+        path = self.nova['path'] + '/extensions'
+        http = httplib2.Http()
+        headers = {'X-Auth-User': '%s' % (self.nova['user']),
+                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        response, content = http.request(path, 'GET', headers=headers)
+        self.assertEqual(response.status, 200)
+        pprint(content)
+        self.assertNotEqual(content, '{"flavors": []}')
+    test_203_verify_extensions_v1_1.tags = ['nova', 'nova-api']
