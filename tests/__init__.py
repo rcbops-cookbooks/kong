@@ -143,9 +143,10 @@ class FunctionalTest(unittest2.TestCase):
                 raise Exception("Unable to get a valid token, please fix")
 
         def _gen_nova_path(self):
-            path = "http://%s:%s/%s" % (self.nova['host'],
+            path = "http://%s:%s/%s/%s" % (self.nova['host'],
                                          self.nova['port'],
-                                         self.nova['ver'])
+                                         self.nova['ver'],
+                                         self.nova['user'])
             return path
 
         def _gen_nova_auth_path(self):
