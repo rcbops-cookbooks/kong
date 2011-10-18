@@ -79,9 +79,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                        'unknown_auth_key',
                                        self.keystone['tenantid'])
             response, content = http.request(path,
-                                             'POST',
-                                             body,
-                                             headers={'Content-Type': 'application/json'})
+                                'POST',
+                                body,
+                                headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
     test_104_bad_user_bad_key.tags = ['nova', 'nova-api']
 
@@ -98,9 +98,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                        self.keystone['pass'],
                                        self.keystone['tenantid'])
             response, content = http.request(path,
-                                             'POST',
-                                             body,
-                                             headers={'Content-Type': 'application/json'})
+                                'POST',
+                                body,
+                                headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
     test_105_bad_user_good_key.tags = ['nova', 'nova-api']
 
@@ -117,9 +117,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                        'unknown_auth_key',
                                        self.keystone['tenantid'])
             response, content = http.request(path,
-                                             'POST',
-                                             body,
-                                             headers={'Content-Type': 'application/json'})
+                                'POST',
+                                body,
+                                headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
     test_106_good_user_bad_key.tags = ['nova', 'nova-api']
 
@@ -135,9 +135,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                        '',
                                        self.keystone['tenantid'])
             response, content = http.request(path,
-                                             'POST',
-                                             body,
-                                             headers={'Content-Type': 'application/json'})
+                                'POST',
+                                body,
+                                headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
     test_107_no_key.tags = ['nova', 'nova-api']
 
@@ -153,9 +153,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                        self.keystone['pass'],
                                        self.keystone['tenantid'])
             response, content = http.request(path,
-                                             'POST',
-                                             body,
-                                             headers={'Content-Type': 'application/json'})
+                                'POST',
+                                body,
+                                headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
     test_108_bad_token.tags = ['nova', 'nova-api']
 
@@ -169,9 +169,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                   "password": self.keystone['pass']}}
             body = json.dumps(body)
             response, content = http.request(path,
-                                             'POST',
-                                             body,
-                                             headers={'Content-Type': 'application/json'})
+                                'POST',
+                                body,
+                                headers={'Content-Type': 'application/json'})
             self.assertEqual(response.status, 200)
     test_109_no_tenant.tags = ['nova', 'nova-api']
 
@@ -185,9 +185,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                        self.keystone['pass'],
                                        self.keystone['tenantid'])
             response, content = http.request(path,
-                                             'GET',
-                                             body,
-                                             headers={'Content-Type': 'application/json'})
+                                'GET',
+                                body,
+                                headers={'Content-Type': 'application/json'})
             self.assertEqual(response.status, 200)
     test_110_get_tenant_list.tags = ['nova', 'nova-api']
 
@@ -210,7 +210,8 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 200)
         self.assertNotEqual(content, '{"flavors": []}')
     test_202_list_flavors_v1_1.tags = ['nova', 'nova-api']
-    
+
+    @tests.skip_test("Skipping verify extensions")
     def test_203_verify_extensions_v1_1(self):
         path = self.nova['path'] + '/extensions'
         http = httplib2.Http()
@@ -218,6 +219,15 @@ class TestNovaAPI(tests.FunctionalTest):
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'GET', headers=headers)
         self.assertEqual(response.status, 200)
-        pprint(content)
+        data = json.loads(content)
+        pprint(data['extensions'])
+        required_extensions = {'os-simple-tenant-usage': 1,
+                               'os-hosts': 1,
+                               'ADMIN': 1,
+                               'os-quota-sets': 1,
+                               'os-flavor-extra-specs': 1,
+                               'os-create-server-ext': 1,
+                               'os-keypairs': 1,
+                               'os-floating-ips': 1}
         self.assertNotEqual(content, '{"flavors": []}')
     test_203_verify_extensions_v1_1.tags = ['nova', 'nova-api']

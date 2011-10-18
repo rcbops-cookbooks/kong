@@ -117,7 +117,8 @@ class FunctionalTest(unittest2.TestCase):
                         raise Exception(
                         "tenantId is required for Keystone auth service v2.0")
                 else:
-                    raise Exception("Unknown apiver, please use either 'v1.0' or 'v2.0'")
+                    raise Exception("Unknown apiver, please use either "
+                                    "'v1.0' or 'v2.0'")
             else:
                 headers = {'X-Auth-User': self.nova['user'],
                            'X-Auth-Key': self.nova['key']}
@@ -267,5 +268,6 @@ class FunctionalTest(unittest2.TestCase):
         if tenantid:
             build['passwordCredentials']['tenantId'] = tenantid
         else:
-            raise Exception("tenantId is required for Keystone auth service v2.0")
+            raise Exception("tenantId is required for Keystone "
+                            "auth service v2.0")
         return json.dumps(build)
