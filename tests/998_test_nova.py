@@ -98,6 +98,10 @@ class TestNovaSpinup(tests.FunctionalTest):
                    'x-image-meta-container-format': 'aki',
                    'Content-Length': '%d' % os.path.getsize(kernel),
                    'Content-Type': 'application/octet-stream'}
+
+        if self.config['keystone']:
+            headers['X-Auth-Token'] = self.nova['X-Auth-Token']
+
         image_file = open(kernel, "rb")
         http = httplib2.Http()
         response, content = http.request(path, 'POST',
@@ -128,6 +132,10 @@ class TestNovaSpinup(tests.FunctionalTest):
                    'x-image-meta-container-format': 'ari',
                    'Content-Length': '%d' % os.path.getsize(initrd),
                    'Content-Type': 'application/octet-stream'}
+
+        if self.config['keystone']:
+            headers['X-Auth-Token'] = self.nova['X-Auth-Token']
+
         image_file = open(initrd, "rb")
         http = httplib2.Http()
         response, content = http.request(path,
@@ -168,6 +176,10 @@ class TestNovaSpinup(tests.FunctionalTest):
                        self.glance['ramdisk_id'],
                    'Content-Length': '%d' % os.path.getsize(image),
                    'Content-Type': 'application/octet-stream'}
+
+        if self.config['keystone']:
+            headers['X-Auth-Token'] = self.nova['X-Auth-Token']
+
         http = httplib2.Http()
         response, content = http.request(path, 'POST',
                                          headers=headers,
