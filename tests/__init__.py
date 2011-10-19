@@ -196,6 +196,7 @@ class FunctionalTest(unittest2.TestCase):
             ret_hash['host'] = self.config['nova']['host']
             ret_hash['port'] = self.config['nova']['port']
             ret_hash['ver'] = self.config['nova']['apiver']
+            ret_hash['network_label'] = self.config['nova']['network_label']
             if self.keystone['user']:
                 ret_hash['user'] = self.keystone['user']
                 ret_hash['key'] = self.keystone['pass']
