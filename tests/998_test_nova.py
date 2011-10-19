@@ -65,11 +65,14 @@ class TestNovaSpinup(tests.FunctionalTest):
         network = data['server']['addresses'][self.config['nova']['network_label']]
         if network:
             for i in network:
-                r = "" . join(os.popen('ping -c5 %s' %(i['addr'])).readlines())
-                if r.find('64 bytes') > 1:
-                    self.result['ping'] = True
-                else:
+                try:
+                    r = "" . join(os.popen('ping -c5 %s' %
+                        (i['addr'])).readlines())
+                    if r.find('64 bytes') > 1:
+                        self.result['ping'] = True
+                except:
                     self.result['ping'] = False
+                    return self.result
             # print "FOUND"
         # addr_name = "private"
         # if 'vmnet' in data['server']['addresses']:
@@ -416,7 +419,7 @@ class TestNovaSpinup(tests.FunctionalTest):
         http = httplib2.Http()
 
         if self.config['keystone']:
-            headers = { 'X-Auth-Token': self.nova['X-Auth-Token'] }
+            headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
             response, content = http.request(path, 'DELETE', headers=headers)
         else:
             response, content = http.request(path, 'DELETE')
@@ -435,7 +438,7 @@ class TestNovaSpinup(tests.FunctionalTest):
         http = httplib2.Http()
 
         if self.config['keystone']:
-            headers = { 'X-Auth-Token': self.nova['X-Auth-Token'] }
+            headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
             response, content = http.request(path, 'DELETE', headers=headers)
         else:
             response, content = http.request(path, 'DELETE')
@@ -454,7 +457,7 @@ class TestNovaSpinup(tests.FunctionalTest):
         http = httplib2.Http()
 
         if self.config['keystone']:
-            headers = { 'X-Auth-Token': self.nova['X-Auth-Token'] }
+            headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
             response, content = http.request(path, 'DELETE', headers=headers)
         else:
             response, content = http.request(path, 'DELETE')
