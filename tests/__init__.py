@@ -102,26 +102,24 @@ class FunctionalTest(unittest2.TestCase):
             return ret_hash
 
         def _generate_auth_token(self):
-            # path = self.nova['auth_path']
             http = httplib2.Http()
             path = "http://%s:%s/%s/tokens" % (self.config['keystone']['host'],
-                                               self.config['keystone']['port'],
-                                               self.config['keystone']['apiver'])
-            if self.config['keystone']['apiver'] == "v2.0": 
-               body = {"passwordCredentials": {
+                                             self.config['keystone']['port'],
+                                             self.config['keystone']['apiver'])
+            if self.config['keystone']['apiver'] == "v2.0":
+                body = {"passwordCredentials": {
                                       "username": self.keystone['user'],
                                       "password": self.keystone['pass']},
                        "tenantid": self.keystone['tenantid']}
-               post_path = urlparse.urljoin(path, "tokens")
-               post_data = json.dumps(body)
-               response, content = http.request(post_path, 'POST',
+                post_path = urlparse.urljoin(path, "tokens")
+                post_data = json.dumps(body)
+                response, content = http.request(post_path, 'POST',
                                  post_data,
                                  headers={'Content-Type': 'application/json'})
-               if response.status == 200:
-                   decode = json.loads(content)
-                   self.keystone['catalog'] = decode['auth']['serviceCatalog']
-                   return decode['auth']['token']['id'].encode('utf-8')
-               pprint(response)
+                if response.status == 200:
+                    decode = json.loads(content)
+                    self.keystone['catalog'] = decode['auth']['serviceCatalog']
+                    return decode['auth']['token']['id'].encode('utf-8')
             if self.config['keystone']['apiver'] == "v1.0":
                 headers = {'X-Auth-User': self.keystone['user'],
                            'X-Auth-Key': self.keystone['key']}
@@ -132,30 +130,22 @@ class FunctionalTest(unittest2.TestCase):
                 raise Exception("Unable to get a valid token, please fix")
 
         def _gen_nova_path(self):
-            for k,v in enumerate(self.keystone['catalog']['nova']):
+            for k, v in enumerate(self.keystone['catalog']['nova']):
                 if v['region'] == self.keystone['region']:
-                    self.nova['path'] = v['publicURL']
-                    self.nova['adminPath'] = v['adminURL']
+                    self.nova['path'] = str(v['publicURL'])
+                    self.nova['adminPath'] = str(v['adminURL'])
                     return True
-            raise Exception("Cannot find region defined in configuration file.")
+            raise Exception(
+                "Cannot find region defined in configuration file.")
 
         def _gen_glance_path(self):
-            for k,v in enumerate(self.keystone['catalog']['glance']):
+            for k, v in enumerate(self.keystone['catalog']['glance']):
                 if v['region'] == self.keystone['region']:
-                    self.glance['path'] = v['publicURL']
-                    self.glance['adminPath'] = v['adminURL']
-            return path
-
-        # def _gen_nova_auth_path(self):
-            # if 'keystone' in self.config:
-                # path = "http://%s:%s/%s" % (self.keystone['host'],
-                                                # self.keystone['port'],
-                                                # self.keystone['apiver'])
-            # else:
-                # path = "http://%s:%s/%s" % (self.nova['host'],
-                                            # self.nova['port'],
-                                            # self.nova['ver'])
-            # return path
+                    self.glance['path'] = str(v['publicURL'])
+                    self.glance['adminPath'] = str(v['adminURL'])
+                    return True
+            raise Exception(
+                "Cannot find region defined in configuration file.")
 
         def _gen_keystone_admin_path(self):
             path = "http://%s:%s/%s" % (self.keystone['host'],
@@ -188,27 +178,6 @@ class FunctionalTest(unittest2.TestCase):
             ret_hash['region'] = self.config['keystone']['region']
             return ret_hash
 
-        # def setupNova(self):
-            # ret_hash = {}
-            # ret_hash['host'] = self.config['nova']['host']
-            # ret_hash['port'] = self.config['nova']['port']
-            # ret_hash['ver'] = self.config['nova']['apiver']
-            # ret_hash['network_label'] = self.config['nova']['network_label']
-            # if self.keystone['user']:
-                # ret_hash['user'] = self.keystone['user']
-                # ret_hash['key'] = self.keystone['pass']
-            # else:
-                # ret_hash['user'] = self.config['nova']['user']
-                # ret_hash['key'] = self.config['nova']['key']
-            # return ret_hash
-
-        # def setupGlance(self):
-            # ret_hash = {}
-            # ret_hash['host'] = self.config['glance']['host']
-            # ret_hash['port'] = self.config['glance']['port']
-            # ret_hash['apiver'] = self.config['glance']['apiver']
-            # return ret_hash
-
         # Parse the config file
         self.config = parse_config_file(self)
         # pprint(self.config)
@@ -219,24 +188,20 @@ class FunctionalTest(unittest2.TestCase):
             self.nova['X-Auth-Token'] = _generate_auth_token(self)
             gen_path = _gen_nova_path(self)
             self.glance = {}
+            gen_path = _gen_glance_path(self)
         else:
-            raise Exception("A valid [keystone] block must be provided in the configuration file")
+            raise Exception(
+                "A valid keystone block must be provided in the configuration."
+            )
         # TODO: add support for swift from keystone service catalog
         if 'swift' in self.config:
             self.swift = setupSwift(self)
-        else: 
-            raise Exception("A valid [swift] block must be provided in the configuration file")
-        # if 'nova' in self.config:
-            # self.nova = setupNova(self)
-        # if 'glance' in self.config:
-            # self.glance = setupGlance(self)
+        else:
+            raise Exception(
+                "A valid swift block must be provided in the configuration."
+            )
 
-        # setup nova auth token
-        # self.nova['X-Auth-Token'] = _generate_auth_token(self)
-        # Setup nova path shortcuts
         self.keystone['admin_path'] = _gen_keystone_admin_path(self)
-        # self.nova['auth_path'] = _gen_nova_auth_path(self)
-        # self.nova['path'] = _gen_nova_path(self)
 
     @classmethod
     def tearDownClass(self):
