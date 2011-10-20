@@ -38,3 +38,4 @@ apiver = v2.0
 user = admin
 password = password
 tenantid = tenant
+region = RegionOne
