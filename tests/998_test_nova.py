@@ -62,7 +62,8 @@ class TestNovaSpinup(tests.FunctionalTest):
         self.result['status'] = data['server']['status']
 
         # Get IP Address of newly created server
-        network = data['server']['addresses'][self.config['nova']['network_label']]
+        network =
+        data['server']['addresses'][self.config['nova']['network_label']]
         if network:
             for i in network:
                 try:
@@ -73,24 +74,6 @@ class TestNovaSpinup(tests.FunctionalTest):
                 except:
                     self.result['ping'] = False
                     return self.result
-            # print "FOUND"
-        # addr_name = "private"
-        # if 'vmnet' in data['server']['addresses']:
-            # ref = data['server']['addresses']['vmnet']
-            # if len(ref) > 0:
-                # addr_name = 'vmnet'
-        # if 'public' in data['server']['addresses']:
-            # ref = data['server']['addresses']['public']
-            # if len(ref) > 0:
-                # addr_name = 'public'
-        # ref = data['server']['addresses'][addr_name]
-        # netaddr = ref[0]['addr']
-
-        # r = "" . join(os.popen('ping -c5 %s' % (netaddr)).readlines())
-        # if r.find('64 bytes') > 1:
-            # self.result['ping'] = True
-        # else:
-            # self.result['ping'] = False
 
         return self.result
 
@@ -324,7 +307,8 @@ class TestNovaSpinup(tests.FunctionalTest):
     test_200_create_server.tags = ['nova']
 
     def test_201_get_server_details(self):
-        path = self.nova['path'] + '/servers/' + str(self.nova['single_server_id'])
+        path =
+        self.nova['path'] + '/servers/' + str(self.nova['single_server_id'])
         #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
         #                                       self.nova['port'],
         #                                       self.nova['ver'],
@@ -338,7 +322,8 @@ class TestNovaSpinup(tests.FunctionalTest):
     test_201_get_server_details.tags = ['nova']
 
     def test_202_delete_server(self):
-        path = self.nova['path'] + '/servers/' + str(self.nova['single_server_id'])
+        path =
+        self.nova['path'] + '/servers/' + str(self.nova['single_server_id'])
         #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
         #                                       self.nova['port'],
         #                                       self.nova['ver'],
