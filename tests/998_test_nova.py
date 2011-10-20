@@ -40,13 +40,9 @@ class TestNovaSpinup(tests.FunctionalTest):
         the API we are also testing ping and ssh
         """
         count = 0
-        path = "http://%s:%s/%s/%s/servers/%s" % (self.nova['host'],
-                                       self.nova['port'],
-                                       self.nova['ver'],
-                                       self.keystone['tenantid'],
-                                       id)
+        path = "%s/servers/%s" % (self.nova['path'], id)
         http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.nova['user']),
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'GET', headers=headers)
         self.assertEqual(response.status, 200)
@@ -62,10 +58,9 @@ class TestNovaSpinup(tests.FunctionalTest):
         self.result['status'] = data['server']['status']
 
         # Get IP Address of newly created server
-        network =
-        data['server']['addresses'][self.config['nova']['network_label']]
-        if network:
-            for i in network:
+        net = data['server']['addresses'][self.config['nova']['network_label']]
+        if net:
+            for i in net:
                 try:
                     r = "" . join(os.popen('ping -c5 %s' %
                         (i['addr'])).readlines())
@@ -74,6 +69,8 @@ class TestNovaSpinup(tests.FunctionalTest):
                 except:
                     self.result['ping'] = False
                     return self.result
+        else:
+            raise Exception("network_label is a required configuration value.")
 
         return self.result
 
@@ -82,12 +79,7 @@ class TestNovaSpinup(tests.FunctionalTest):
         Uploads a test kernal to glance api
         """
         kernel = self.config['environment']['kernel']
-        if 'apiver' in self.glance:
-            path = "http://%s:%s/%s/images" % (self.glance['host'],
-                          self.glance['port'], self.glance['apiver'])
-        else:
-            path = "http://%s:%s/images" % (self.glance['host'],
-                                        self.glance['port'])
+        path = self.glance['path'] + "/images"
         headers = {'x-image-meta-is-public': 'true',
                    'x-image-meta-name': 'test-kernel',
                    'x-image-meta-disk-format': 'aki',
@@ -105,6 +97,7 @@ class TestNovaSpinup(tests.FunctionalTest):
                                          body=image_file)
         image_file.close()
         self.assertEqual(201, response.status)
+        pprint(response)
         data = json.loads(content)
         self.glance['kernel_id'] = data['image']['id']
         self.assertEqual(data['image']['name'], "test-kernel")
@@ -116,12 +109,7 @@ class TestNovaSpinup(tests.FunctionalTest):
         Uploads a test initrd to glance api
         """
         initrd = self.config['environment']['initrd']
-        if 'apiver' in self.glance:
-            path = "http://%s:%s/%s/images" % (self.glance['host'],
-                          self.glance['port'], self.glance['apiver'])
-        else:
-            path = "http://%s:%s/images" % (self.glance['host'],
-                                        self.glance['port'])
+        path = self.glance['path'] + "/images"
         headers = {'x-image-meta-is-public': 'true',
                    'x-image-meta-name': 'test-ramdisk',
                    'x-image-meta-disk-format': 'ari',
@@ -156,12 +144,7 @@ class TestNovaSpinup(tests.FunctionalTest):
         upload_data = ""
         for chunk in self._read_in_chunks(image):
             upload_data += chunk
-        if 'apiver' in self.glance:
-            path = "http://%s:%s/%s/images" % (self.glance['host'],
-                          self.glance['port'], self.glance['apiver'])
-        else:
-            path = "http://%s:%s/images" % (self.glance['host'],
-                                        self.glance['port'])
+        path = self.glance['path'] + "/images"
         headers = {'x-image-meta-is-public': 'true',
                    'x-image-meta-name': 'test-image',
                    'x-image-meta-disk-format': 'ami',
@@ -215,13 +198,9 @@ class TestNovaSpinup(tests.FunctionalTest):
         if not 'kernel_id' in self.glance:
             self.glance['kernel_id'] = "61"
 
-        path = "http://%s:%s/%s/%s/images/%s" % (self.nova['host'],
-                                              self.nova['port'],
-                                              self.nova['ver'],
-                                              self.keystone['tenantid'],
-                                              self.glance['kernel_id'])
+        path = self.nova['path'] + "/images/%s" % (self.glance['kernel_id'])
         http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.nova['user']),
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'GET', headers=headers)
         self.assertEqual(response.status, 200)
@@ -235,13 +214,9 @@ class TestNovaSpinup(tests.FunctionalTest):
         if not 'ramdisk_id' in self.glance:
             self.glance['ramdisk_id'] = "62"
 
-        path = "http://%s:%s/%s/%s/images/%s" % (self.nova['host'],
-                                              self.nova['port'],
-                                              self.nova['ver'],
-                                              self.keystone['tenantid'],
-                                              self.glance['ramdisk_id'])
+        path = self.nova['path'] + "/images/%s" % (self.glance['ramdisk_id'])
         http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.nova['user']),
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'GET', headers=headers)
         self.assertEqual(response.status, 200)
@@ -255,13 +230,9 @@ class TestNovaSpinup(tests.FunctionalTest):
         if not 'image_id' in self.glance:
             self.glance['image_id'] = "63"
 
-        path = "http://%s:%s/%s/%s/images/%s" % (self.nova['host'],
-                                              self.nova['port'],
-                                              self.nova['ver'],
-                                              self.keystone['tenantid'],
-                                              self.glance['image_id'])
+        path = self.nova['path'] + "/images/%s" % (self.glance['image_id'])
         http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.nova['user']),
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'GET', headers=headers)
         self.assertEqual(response.status, 200)
@@ -271,11 +242,8 @@ class TestNovaSpinup(tests.FunctionalTest):
 
     def test_200_create_server(self):
         path = self.nova['path'] + '/servers'
-        #path = "http://%s:%s/%s/servers" % (self.nova['host'],
-        #                                    self.nova['port'],
-        #                                    self.nova['ver'])
         http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.nova['user']),
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token']),
                    'Content-Type': 'application/json'}
 
@@ -283,16 +251,8 @@ class TestNovaSpinup(tests.FunctionalTest):
         json_str = {"server":
             {
                 "name": "testing server creation",
-                "flavorRef": "http://%s:%s/%s/flavors/2" % (self.nova['host'],
-                                                      self.nova['port'],
-                                                      self.nova['ver']),
+                "flavorRef": "%s/flavors/2" % (self.nova['path']),
                 "imageRef": self.glance['image_id']}}
-#                "imageRef": "http://%s:%s/%s/images/%s" % (self.nova['host'],
-#                                                      self.nova['port'],
-#                                                      self.nova['ver'],
-#                                                      self.glance['image_id'])
-#           }
-#       }
         data = json.dumps(json_str)
         response, content = http.request(path, 'POST', headers=headers,
                                          body=data)
@@ -307,14 +267,10 @@ class TestNovaSpinup(tests.FunctionalTest):
     test_200_create_server.tags = ['nova']
 
     def test_201_get_server_details(self):
-        path =
-        self.nova['path'] + '/servers/' + str(self.nova['single_server_id'])
-        #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
-        #                                       self.nova['port'],
-        #                                       self.nova['ver'],
-        #                                       self.nova['single_server_id'])
+        path = self.nova['path'] + '/servers/'
+        path = path + str(self.nova['single_server_id'])
         http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.nova['user']),
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
 
         response, content = http.request(path, 'GET', headers=headers)
@@ -322,14 +278,10 @@ class TestNovaSpinup(tests.FunctionalTest):
     test_201_get_server_details.tags = ['nova']
 
     def test_202_delete_server(self):
-        path =
-        self.nova['path'] + '/servers/' + str(self.nova['single_server_id'])
-        #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
-        #                                       self.nova['port'],
-        #                                       self.nova['ver'],
-        #                                       self.nova['single_server_id'])
+        path = self.nova['path'] + '/servers/'
+        path = path + str(self.nova['single_server_id'])
         http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.nova['user']),
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'DELETE', headers=headers)
         self.assertEqual(response.status, 204)
@@ -341,11 +293,8 @@ class TestNovaSpinup(tests.FunctionalTest):
     def test_900_create_multiple(self):
         self.nova['multi_server'] = {}
         path = self.nova['path'] + '/servers'
-        #path = "http://%s:%s/%s/servers" % (self.nova['host'],
-        #                                    self.nova['port'],
-        #                                    self.nova['ver'])
         http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.nova['user']),
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token']),
                    'Content-Type': 'application/json'}
 
@@ -354,18 +303,8 @@ class TestNovaSpinup(tests.FunctionalTest):
             json_str = {"server":
                 {
                     "name": "test %s" % (i),
-                    "flavorRef": "http://%s:%s/%s/flavors/2" % (
-                                                   self.nova['host'],
-                                                   self.nova['port'],
-                                                   self.nova['ver']),
+                    "flavorRef": "%s/flavors/2" % (self.nova['path']),
                     "imageRef": self.glance['image_id']}}
-#                    "imageRef": "http://%s:%s/%s/images/%s" % (
-#                                                   self.nova['host'],
-#                                                   self.nova['port'],
-#                                                   self.nova['ver'],
-#                                                   self.glance['image_id'])
-#                }
-            #}
             data = json.dumps(json_str)
             response, content = http.request(path, 'POST', headers=headers,
                                              body=data)
@@ -385,70 +324,39 @@ class TestNovaSpinup(tests.FunctionalTest):
         print "Deleting %s instances." % (len(self.nova['multi_server']))
         for k, v in self.nova['multi_server'].iteritems():
             path = self.nova['path'] + '/servers/' + str(v)
-            #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
-            #                                       self.nova['port'],
-            #                                       self.nova['ver'],
-            #                                       v)
             http = httplib2.Http()
-            headers = {'X-Auth-User': '%s' % (self.nova['user']),
+            headers = {'X-Auth-User': '%s' % (self.keystone['user']),
                        'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
             response, content = http.request(path, 'DELETE', headers=headers)
             self.assertEqual(204, response.status)
     test_901_delete_multi_server.tags = ['nova']
 
     def test_997_delete_kernel_from_glance(self):
-        if 'apiver' in self.glance:
-            path = "http://%s:%s/%s/images/%s" % (self.glance['host'],
-                          self.glance['port'], self.glance['apiver'],
-                          self.glance['kernel_id'])
-        else:
-            path = "http://%s:%s/images/%s" % (self.glance['host'],
-                          self.glance['port'], self.glance['kernel_id'])
+        path = self.glance['path'] + "/images/%s" % (self.glance['kernel_id'])
         http = httplib2.Http()
 
-        if self.config['keystone']:
-            headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
-            response, content = http.request(path, 'DELETE', headers=headers)
-        else:
-            response, content = http.request(path, 'DELETE')
+        headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
+        response, content = http.request(path, 'DELETE', headers=headers)
 
         self.assertEqual(200, response.status)
     test_997_delete_kernel_from_glance.tags = ['glance', 'nova']
 
     def test_998_delete_initrd_from_glance(self):
-        if 'apiver' in self.glance:
-            path = "http://%s:%s/%s/images/%s" % (self.glance['host'],
-                          self.glance['port'], self.glance['apiver'],
-                          self.glance['ramdisk_id'])
-        else:
-            path = "http://%s:%s/images/%s" % (self.glance['host'],
-                          self.glance['port'], self.glance['ramdisk_id'])
+        path = self.glance['path'] + "/images/%s" % (self.glance['ramdisk_id'])
         http = httplib2.Http()
 
-        if self.config['keystone']:
-            headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
-            response, content = http.request(path, 'DELETE', headers=headers)
-        else:
-            response, content = http.request(path, 'DELETE')
+        headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
+        response, content = http.request(path, 'DELETE', headers=headers)
 
         self.assertEqual(200, response.status)
     test_998_delete_initrd_from_glance.tags = ['glance', 'nova']
 
     def test_999_delete_image_from_glance(self):
-        if 'apiver' in self.glance:
-            path = "http://%s:%s/%s/images/%s" % (self.glance['host'],
-                          self.glance['port'], self.glance['apiver'],
-                          self.glance['image_id'])
-        else:
-            path = "http://%s:%s/images/%s" % (self.glance['host'],
-                          self.glance['port'], self.glance['image_id'])
+        path = self.glance['path'] + "/images/%s" % (self.glance['image_id'])
         http = httplib2.Http()
 
-        if self.config['keystone']:
-            headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
-            response, content = http.request(path, 'DELETE', headers=headers)
-        else:
-            response, content = http.request(path, 'DELETE')
+        headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
+        response, content = http.request(path, 'DELETE', headers=headers)
 
         self.assertEqual(200, response.status)
     test_999_delete_image_from_glance.tags = ['glance', 'nova']
