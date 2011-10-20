@@ -62,8 +62,7 @@ class TestNovaSpinup(tests.FunctionalTest):
         self.result['status'] = data['server']['status']
 
         # Get IP Address of newly created server
-        network =
-        data['server']['addresses'][self.config['nova']['network_label']]
+        network = data['server']['addresses'][self.config['nova']['network_label']]
         if network:
             for i in network:
                 try:
@@ -307,8 +306,7 @@ class TestNovaSpinup(tests.FunctionalTest):
     test_200_create_server.tags = ['nova']
 
     def test_201_get_server_details(self):
-        path =
-        self.nova['path'] + '/servers/' + str(self.nova['single_server_id'])
+        path = self.nova['path'] + '/servers/' + str(self.nova['single_server_id'])
         #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
         #                                       self.nova['port'],
         #                                       self.nova['ver'],
@@ -322,8 +320,7 @@ class TestNovaSpinup(tests.FunctionalTest):
     test_201_get_server_details.tags = ['nova']
 
     def test_202_delete_server(self):
-        path =
-        self.nova['path'] + '/servers/' + str(self.nova['single_server_id'])
+        path = self.nova['path'] + '/servers/' + str(self.nova['single_server_id'])
         #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
         #                                       self.nova['port'],
         #                                       self.nova['ver'],

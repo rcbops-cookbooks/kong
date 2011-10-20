@@ -102,7 +102,10 @@ class FunctionalTest(unittest2.TestCase):
             return ret_hash
 
         def _generate_auth_token(self):
-            path = self.nova['auth_path']
+            # path = self.nova['auth_path']
+            path = "http://%s:%s/%s/tokens" % (self.config['keystone']['host'],
+                                               self.config['keystone']['port'],
+                                               self.config['keystone']['apiver'])
             if 'keystone' in self.config:
                 if self.keystone['apiver'] == "v1.0":
                     headers = {'X-Auth-User': self.keystone['user'],
@@ -112,8 +115,7 @@ class FunctionalTest(unittest2.TestCase):
                                           "username": self.keystone['user'],
                                           "password": self.keystone['pass']}}
                     if self.keystone['tenantid']:
-                        body['passwordCredentials']['tenantId'] =
-                        self.keystone['tenantid']
+                        body['passwordCredentials']['tenantId'] = self.keystone['tenantid']
                     else:
                         raise Exception(
                         "tenantId is required for Keystone auth service v2.0")
@@ -145,10 +147,12 @@ class FunctionalTest(unittest2.TestCase):
                 raise Exception("Unable to get a valid token, please fix")
 
         def _gen_nova_path(self):
-            path = "http://%s:%s/%s/%s" % (self.nova['host'],
-                                         self.nova['port'],
-                                         self.nova['ver'],
-                                         self.keystone['tenantid'])
+            # path = "http://%s:%s/%s/%s" % (self.nova['host'],
+                                         # self.nova['port'],
+                                         # self.nova['ver'],
+                                         # self.keystone['tenantid'])
+            for k,v in enumerate(self.keystone['catalog']['nova']):
+                path = v['publicURL']
             return path
 
         def _gen_nova_auth_path(self):
@@ -226,12 +230,12 @@ class FunctionalTest(unittest2.TestCase):
         if 'glance' in self.config:
             self.glance = setupGlance(self)
 
+        # setup nova auth token
+        self.nova['X-Auth-Token'] = _generate_auth_token(self)
         # Setup nova path shortcuts
         self.keystone['admin_path'] = _gen_keystone_admin_path(self)
         self.nova['auth_path'] = _gen_nova_auth_path(self)
         self.nova['path'] = _gen_nova_path(self)
-        # setup nova auth token
-        self.nova['X-Auth-Token'] = _generate_auth_token(self)
 
     @classmethod
     def tearDownClass(self):
