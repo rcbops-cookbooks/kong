@@ -232,9 +232,10 @@ class TestNovaSpinup(tests.FunctionalTest):
         if not 'kernel_id' in self.glance:
             self.glance['kernel_id'] = "61"
 
-        path = "http://%s:%s/%s/images/%s" % (self.nova['host'],
+        path = "http://%s:%s/%s/%s/images/%s" % (self.nova['host'],
                                               self.nova['port'],
                                               self.nova['ver'],
+                                              self.keystone['tenantid'],
                                               self.glance['kernel_id'])
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
@@ -251,9 +252,10 @@ class TestNovaSpinup(tests.FunctionalTest):
         if not 'ramdisk_id' in self.glance:
             self.glance['ramdisk_id'] = "62"
 
-        path = "http://%s:%s/%s/images/%s" % (self.nova['host'],
+        path = "http://%s:%s/%s/%s/images/%s" % (self.nova['host'],
                                               self.nova['port'],
                                               self.nova['ver'],
+                                              self.keystone['tenantid'],
                                               self.glance['ramdisk_id'])
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
@@ -270,9 +272,10 @@ class TestNovaSpinup(tests.FunctionalTest):
         if not 'image_id' in self.glance:
             self.glance['image_id'] = "63"
 
-        path = "http://%s:%s/%s/images/%s" % (self.nova['host'],
+        path = "http://%s:%s/%s/%s/images/%s" % (self.nova['host'],
                                               self.nova['port'],
                                               self.nova['ver'],
+                                              self.keystone['tenantid'],
                                               self.glance['image_id'])
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
@@ -284,7 +287,7 @@ class TestNovaSpinup(tests.FunctionalTest):
     test_113_verify_image_active_v1_1.tags = ['nova']
 
     def test_200_create_server(self):
-        path = self.nova['path'] + self.keystone['tenantid'] + '/servers'
+        path = self.nova['path'] + '/servers'
         #path = "http://%s:%s/%s/servers" % (self.nova['host'],
         #                                    self.nova['port'],
         #                                    self.nova['ver'])
@@ -331,7 +334,7 @@ class TestNovaSpinup(tests.FunctionalTest):
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
 
         response, content = http.request(path, 'GET', headers=headers)
-        self.assertEqual(response.status, 202)
+        self.assertEqual(response.status, 200)
     test_201_get_server_details.tags = ['nova']
 
     def test_202_delete_server(self):
@@ -344,7 +347,7 @@ class TestNovaSpinup(tests.FunctionalTest):
         headers = {'X-Auth-User': '%s' % (self.nova['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'DELETE', headers=headers)
-        self.assertEqual(response.status, 202)
+        self.assertEqual(response.status, 204)
     test_202_delete_server.tags = ['nova']
 
     # MOVING TO 900 because it can kill the API
@@ -396,7 +399,7 @@ class TestNovaSpinup(tests.FunctionalTest):
     def test_901_delete_multi_server(self):
         print "Deleting %s instances." % (len(self.nova['multi_server']))
         for k, v in self.nova['multi_server'].iteritems():
-            path = self.nova['path'] + '/severs/' + str(v)
+            path = self.nova['path'] + '/servers/' + str(v)
             #path = "http://%s:%s/%s/servers/%s" % (self.nova['host'],
             #                                       self.nova['port'],
             #                                       self.nova['ver'],

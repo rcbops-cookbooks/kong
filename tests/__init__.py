@@ -147,7 +147,7 @@ class FunctionalTest(unittest2.TestCase):
             path = "http://%s:%s/%s/%s" % (self.nova['host'],
                                          self.nova['port'],
                                          self.nova['ver'],
-                                         self.nova['user'])
+                                         self.keystone['tenantid'])
             return path
 
         def _gen_nova_auth_path(self):
