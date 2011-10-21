@@ -97,10 +97,10 @@ def install_dependencies(venv=VENV):
                 redirect_output=False)
 
     # Tell the virtual env how to "import glance"
-    pthfile = os.path.join(venv, "lib", "python2.6", "site-packages",
-                                 "glance.pth")
-    f = open(pthfile, 'w')
-    f.write("%s\n" % ROOT)
+    # pthfile = os.path.join(venv, "lib", "python2.6", "site-packages",
+    #                             "glance.pth")
+    #f = open(pthfile, 'w')
+    #f.write("%s\n" % ROOT)
 
 
 def print_help():
