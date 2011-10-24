@@ -38,7 +38,6 @@ class TestNovaAPI(tests.FunctionalTest):
         headers = {'X-Auth-User': self.keystone['user'],
                    'X-Auth-Token': self.nova['X-Auth-Token']}
         response, content = http.request(path, 'GET', headers=headers)
-        pprint(content)
         self.assertEqual(response.status, 200)
         data = json.loads(content)
         self.assertEqual(len(data['versions']), 2)
@@ -186,15 +185,16 @@ class TestNovaAPI(tests.FunctionalTest):
                             headers={'Content-Type': 'application/json',
                                      'X-Auth-Token': self.nova['X-Auth-Token']})
         self.assertEqual(response.status, 200)
-        pprint(content)
     test_110_get_tenant_list.tags = ['nova', 'nova-api']
 
     def test_201_verify_blank_limits(self):
         path = self.nova['path'] + '/limits'
         http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
-                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'GET', headers=headers)
+        data = json.loads(content)
+        for i in data['limits']['rate']:
+            pprint(i)
         self.assertEqual(response.status, 200)
         self.assertNotEqual(content, '{"limits": []}')
     test_201_verify_blank_limits.tags = ['nova', 'nova-api']

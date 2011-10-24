@@ -184,11 +184,13 @@ class FunctionalTest(unittest2.TestCase):
 
         if 'keystone' in self.config:
             self.keystone = setupKeystone(self)
+            self.keystone['admin_path'] = _gen_keystone_admin_path(self)
             self.nova = {}
             self.nova['X-Auth-Token'] = _generate_auth_token(self)
             gen_path = _gen_nova_path(self)
             self.glance = {}
             gen_path = _gen_glance_path(self)
+            self.limits = {}
         else:
             raise Exception(
                 "A valid keystone block must be provided in the configuration."
@@ -201,7 +203,6 @@ class FunctionalTest(unittest2.TestCase):
                 "A valid swift block must be provided in the configuration."
             )
 
-        self.keystone['admin_path'] = _gen_keystone_admin_path(self)
 
     @classmethod
     def tearDownClass(self):
