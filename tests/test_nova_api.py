@@ -31,7 +31,49 @@ from pprint import pprint
 
 
 class TestNovaAPI(tests.FunctionalTest):
-    def test_101_verify_version_selection_default(self):
+    def build_check(self, id):
+        self.result = {}
+        """
+        This is intended to check that a server completes the build process
+        and enters an active state upon creation. Due to reporting errors in
+        the API we are also testing ping and ssh
+        """
+        count = 0
+        path = "%s/servers/%s" % (self.nova['path'], id)
+        http = httplib2.Http()
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
+                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        response, content = http.request(path, 'GET', headers=headers)
+        self.assertEqual(response.status, 200)
+        data = json.loads(content)
+
+        # Get Server status exit when active
+        while (data['server']['status'] != 'ACTIVE'):
+            response, content = http.request(path, 'GET', headers=headers)
+            data = json.loads(content)
+            time.sleep(5)
+            count = count + 5
+        self.result['serverid'] = id
+        self.result['status'] = data['server']['status']
+
+        # Get IP Address of newly created server
+        net = data['server']['addresses'][self.config['nova']['network_label']]
+        if net:
+            for i in net:
+                try:
+                    r = "" . join(os.popen('ping -c5 %s' %
+                        (i['addr'])).readlines())
+                    if r.find('64 bytes') > 1:
+                        self.result['ping'] = True
+                except:
+                    self.result['ping'] = False
+                    return self.result
+        else:
+            raise Exception("network_label is a required configuration value.")
+
+        return self.result
+
+    def test_001_verify_version_selection_default(self):
         remove = "/v1.1/" + self.keystone['tenantid']
         path = self.nova['path'].replace(remove, '')
         http = httplib2.Http()
@@ -41,10 +83,10 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 200)
         data = json.loads(content)
         self.assertEqual(len(data['versions']), 2)
-    test_101_verify_version_selection_default.tags = ['nova', 'nova-api']
+    test_001_verify_version_selection_default.tags = ['nova', 'nova-api']
 
     # @tests.skip_test("Currently Not Working")
-    def test_102_verify_version_selection_json(self):
+    def test_002_verify_version_selection_json(self):
         remove = "/v1.1/" + self.keystone['tenantid']
         path = self.nova['path'].replace(remove, '') + "/.json"
         http = httplib2.Http()
@@ -53,10 +95,10 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 300)
         data = json.loads(content)
         self.assertEqual(len(data['choices']), 2)
-    test_102_verify_version_selection_json.tags = ['nova', 'nova-api']
+    test_002_verify_version_selection_json.tags = ['nova', 'nova-api']
 
     # @tests.skip_test("Currently Not Working")
-    def test_103_verify_version_selection_xml(self):
+    def test_003_verify_version_selection_xml(self):
         remove = "/v1.1/" + self.keystone['tenantid']
         path = self.nova['path'].replace(remove, '') + "/.xml"
         http = httplib2.Http()
@@ -64,9 +106,9 @@ class TestNovaAPI(tests.FunctionalTest):
         response, content = http.request(path, 'GET', headers=headers)
         self.assertEqual(response.status, 300)
         self.assertTrue('<version ' in content)
-    test_103_verify_version_selection_xml.tags = ['nova', 'nova-api']
+    test_003_verify_version_selection_xml.tags = ['nova', 'nova-api']
 
-    def test_104_bad_user_bad_key(self):
+    def test_010_bad_user_bad_key(self):
         path = self.nova['path']
         http = httplib2.Http()
         if not self.keystone:
@@ -83,9 +125,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                 body,
                                 headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
-    test_104_bad_user_bad_key.tags = ['nova', 'nova-api']
+    test_010_bad_user_bad_key.tags = ['nova', 'nova-api', 'keystone']
 
-    def test_105_bad_user_good_key(self):
+    def test_011_bad_user_good_key(self):
         path = self.nova['path']
         http = httplib2.Http()
         if not self.keystone:
@@ -102,9 +144,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                 body,
                                 headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
-    test_105_bad_user_good_key.tags = ['nova', 'nova-api']
+    test_011_bad_user_good_key.tags = ['nova', 'nova-api', 'keystone']
 
-    def test_106_good_user_bad_key(self):
+    def test_012_good_user_bad_key(self):
         path = self.nova['path']
         http = httplib2.Http()
         if not self.keystone:
@@ -121,9 +163,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                 body,
                                 headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
-    test_106_good_user_bad_key.tags = ['nova', 'nova-api']
+    test_012_good_user_bad_key.tags = ['nova', 'nova-api', 'keystone']
 
-    def test_107_no_key(self):
+    def test_013_no_key(self):
         path = self.nova['path']
         http = httplib2.Http()
         if not self.keystone:
@@ -139,9 +181,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                 body,
                                 headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
-    test_107_no_key.tags = ['nova', 'nova-api']
+    test_013_no_key.tags = ['nova', 'nova-api', 'keystone']
 
-    def test_108_bad_token(self):
+    def test_014_bad_token(self):
         path = self.nova['path']
         http = httplib2.Http()
         if not self.keystone:
@@ -157,10 +199,9 @@ class TestNovaAPI(tests.FunctionalTest):
                                 body,
                                 headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
-    test_108_bad_token.tags = ['nova', 'nova-api']
+    test_014_bad_token.tags = ['nova', 'nova-api', 'keystone']
 
-    # Currently fails because keystone returns 200 on no tenant provided.
-    def test_109_no_tenant(self):
+    def test_015_no_tenant(self):
         path = self.nova['path'] + "/tokens"
         http = httplib2.Http()
         body = {"passwordCredentials": {
@@ -172,10 +213,10 @@ class TestNovaAPI(tests.FunctionalTest):
                             body,
                             headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status, 401)
-    test_109_no_tenant.tags = ['nova', 'nova-api']
+    test_015_no_tenant.tags = ['nova', 'nova-api', 'keystone']
 
     # @tests.skip_test("Currently Not Working")
-    def test_110_get_tenant_list(self):
+    def test_016_get_tenant_list(self):
         path = "http://%s:%s/%s/tenants" % (self.keystone['host'],
                                            self.keystone['port'],
                                            self.keystone['apiver'])
@@ -185,32 +226,24 @@ class TestNovaAPI(tests.FunctionalTest):
                             headers={'Content-Type': 'application/json',
                                      'X-Auth-Token': self.nova['X-Auth-Token']})
         self.assertEqual(response.status, 200)
-    test_110_get_tenant_list.tags = ['nova', 'nova-api']
+    test_016_get_tenant_list.tags = ['nova', 'nova-api', 'keystone']
 
-    def test_201_verify_blank_limits(self):
-        path = self.nova['path'] + '/limits'
-        http = httplib2.Http()
-        headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
-        response, content = http.request(path, 'GET', headers=headers)
-        data = json.loads(content)
-        for i in data['limits']['rate']:
-            pprint(i)
-        self.assertEqual(response.status, 200)
-        self.assertNotEqual(content, '{"limits": []}')
-    test_201_verify_blank_limits.tags = ['nova', 'nova-api']
-
-    def test_202_list_flavors_v1_1(self):
+    def test_020_list_flavors_v1_1(self):
         path = self.nova['path'] + '/flavors'
         http = httplib2.Http()
         headers = {'X-Auth-User': '%s' % (self.keystone['user']),
                    'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'GET', headers=headers)
+        data = json.loads(content)
+        for i in data['flavors']:
+            if i['name'] == "m1.tiny":
+                self.flavor['id'] = i['id']
         self.assertEqual(response.status, 200)
         self.assertNotEqual(content, '{"flavors": []}')
-    test_202_list_flavors_v1_1.tags = ['nova', 'nova-api']
+    test_020_list_flavors_v1_1.tags = ['nova', 'nova-api']
 
     @tests.skip_test("Skipping verify extensions")
-    def test_203_verify_extensions_v1_1(self):
+    def test_021_verify_extensions_v1_1(self):
         remove = "/v1.1/" + self.keystone['tenantid']
         path = self.nova['path'].replace(remove, '') + "/extensions"
         http = httplib2.Http()
@@ -228,4 +261,275 @@ class TestNovaAPI(tests.FunctionalTest):
                                'os-keypairs': 1,
                                'os-floating-ips': 1}
         self.assertNotEqual(content, '{"flavors": []}')
-    test_203_verify_extensions_v1_1.tags = ['nova', 'nova-api']
+    test_021_verify_extensions_v1_1.tags = ['nova', 'nova-api']
+
+    def test_022_verify_not_blank_limits(self):
+        path = self.nova['path'] + '/limits'
+        http = httplib2.Http()
+        headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        response, content = http.request(path, 'GET', headers=headers)
+        data = json.loads(content)
+        rate_limits = data['limits']['rate']
+
+        #### PUT, POST, DELETE Rate Limits (Defaults)
+        for i, l in enumerate(rate_limits):
+            for k,v in enumerate(rate_limits[i]['limit']):
+                if v['verb'] == "POST" and v['unit'] == "MINUTE":
+                    self.limits['POST'] = v['value']
+                if v['verb'] == "PUT":
+                    self.limits['PUT'] = v['value']
+                if v['verb'] == "DELETE":
+                    self.limits['DELETE'] = v['value']
+
+        self.assertEqual(response.status, 200)
+        self.assertNotEqual(content, '{"limits": []}')
+    test_022_verify_not_blank_limits.tags = ['nova', 'nova-api']
+
+    def test_101_upload_kernel_to_glance(self):
+        """
+        Uploads a test kernal to glance api
+        """
+        kernel = self.config['environment']['kernel']
+        path = self.glance['path'] + "/images"
+        headers = {'x-image-meta-is-public': 'true',
+                   'x-image-meta-name': 'test-kernel',
+                   'x-image-meta-disk-format': 'aki',
+                   'x-image-meta-container-format': 'aki',
+                   'Content-Length': '%d' % os.path.getsize(kernel),
+                   'Content-Type': 'application/octet-stream'}
+
+        if self.config['keystone']:
+            headers['X-Auth-Token'] = self.nova['X-Auth-Token']
+
+        image_file = open(kernel, "rb")
+        http = httplib2.Http()
+        response, content = http.request(path, 'POST',
+                                         headers=headers,
+                                         body=image_file)
+        image_file.close()
+        self.assertEqual(201, response.status)
+        data = json.loads(content)
+        self.glance['kernel_id'] = data['image']['id']
+        self.assertEqual(data['image']['name'], "test-kernel")
+        self.assertEqual(data['image']['checksum'], self._md5sum_file(kernel))
+    test_101_upload_kernel_to_glance.tags = ['glance', 'nova'] 
+
+    def test_102_upload_initrd_to_glance(self):
+        """
+        Uploads a test initrd to glance api
+        """
+        initrd = self.config['environment']['initrd']
+        path = self.glance['path'] + "/images"
+        headers = {'x-image-meta-is-public': 'true',
+                   'x-image-meta-name': 'test-ramdisk',
+                   'x-image-meta-disk-format': 'ari',
+                   'x-image-meta-container-format': 'ari',
+                   'Content-Length': '%d' % os.path.getsize(initrd),
+                   'Content-Type': 'application/octet-stream'}
+
+        if self.config['keystone']:
+            headers['X-Auth-Token'] = self.nova['X-Auth-Token']
+
+        image_file = open(initrd, "rb")
+        http = httplib2.Http()
+        response, content = http.request(path,
+                                         'POST',
+                                         headers=headers,
+                                         body=image_file)
+        image_file.close()
+        self.assertEqual(201, response.status)
+        data = json.loads(content)
+        self.glance['ramdisk_id'] = data['image']['id']
+        self.assertEqual(data['image']['name'], "test-ramdisk")
+        self.assertEqual(data['image']['checksum'], self._md5sum_file(initrd))
+    test_102_upload_initrd_to_glance.tags = ['glance', 'nova']
+
+    def test_103_upload_image_to_glance(self):
+        """
+        Uploads a test image to glance api, and
+        links it to the initrd and kernel uploaded
+        earlier
+        """
+        image = self.config['environment']['image']
+        upload_data = ""
+        for chunk in self._read_in_chunks(image):
+            upload_data += chunk
+        path = self.glance['path'] + "/images"
+        headers = {'x-image-meta-is-public': 'true',
+                   'x-image-meta-name': 'test-image',
+                   'x-image-meta-disk-format': 'ami',
+                   'x-image-meta-container-format': 'ami',
+                   'x-image-meta-property-Kernel_id': '%s' % \
+                       self.glance['kernel_id'],
+                   'x-image-meta-property-Ramdisk_id': '%s' % \
+                       self.glance['ramdisk_id'],
+                   'Content-Length': '%d' % os.path.getsize(image),
+                   'Content-Type': 'application/octet-stream'}
+
+        if self.config['keystone']:
+            headers['X-Auth-Token'] = self.nova['X-Auth-Token']
+
+        http = httplib2.Http()
+        response, content = http.request(path, 'POST',
+                                         headers=headers,
+                                         body=upload_data)
+        self.assertEqual(201, response.status)
+        data = json.loads(content)
+        self.glance['image_id'] = data['image']['id']
+        self.assertEqual(data['image']['name'], "test-image")
+        self.assertEqual(data['image']['checksum'], self._md5sum_file(image))
+    test_103_upload_image_to_glance.tags = ['glance', 'nova']
+
+    def test_104_verify_kernel_active_v1_1(self):
+        # for testing purposes change self.glance['kernel_id'] to an active
+        # kernel image allow for skipping glance tests
+        if not 'kernel_id' in self.glance:
+            self.glance['kernel_id'] = "61"
+
+        path = self.nova['path'] + "/images/%s" % (self.glance['kernel_id'])
+        http = httplib2.Http()
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
+                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        response, content = http.request(path, 'GET', headers=headers)
+        self.assertEqual(response.status, 200)
+        data = json.loads(content)
+        self.assertEqual(data['image']['status'], 'ACTIVE')
+    test_104_verify_kernel_active_v1_1.tags = ['nova']
+
+    def test_105_verify_ramdisk_active_v1_1(self):
+        # for testing purposes change self.glance['ramdisk_id'] to an active
+        # ramdisk image, allows you to skip glance tests
+        if not 'ramdisk_id' in self.glance:
+            self.glance['ramdisk_id'] = "62"
+
+        path = self.nova['path'] + "/images/%s" % (self.glance['ramdisk_id'])
+        http = httplib2.Http()
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
+                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        response, content = http.request(path, 'GET', headers=headers)
+        self.assertEqual(response.status, 200)
+        data = json.loads(content)
+        self.assertEqual(data['image']['status'], 'ACTIVE')
+    test_105_verify_ramdisk_active_v1_1.tags = ['nova']
+
+    def test_106_verify_image_active_v1_1(self):
+        # for testing purposes change self.glance['image_id'] to an active
+        # image id allows for skipping glance tests
+        if not 'image_id' in self.glance:
+            self.glance['image_id'] = "63"
+
+        path = self.nova['path'] + "/images/%s" % (self.glance['image_id'])
+        http = httplib2.Http()
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
+                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        response, content = http.request(path, 'GET', headers=headers)
+        self.assertEqual(response.status, 200)
+        data = json.loads(content)
+        self.assertEqual(data['image']['status'], 'ACTIVE')
+    test_106_verify_image_active_v1_1.tags = ['nova']
+
+    def test_200_create_server(self):
+        path = self.nova['path'] + '/servers'
+        http = httplib2.Http()
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
+                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token']),
+                   'Content-Type': 'application/json'}
+
+        # Change imageRef to self.glance['image_id']
+        json_str = {"server":
+            {
+                "name": "testing server creation",
+                "flavorRef": "%s/flavors/%s" % (self.nova['path'],
+                                                self.flavor['id']),
+                "imageRef": self.glance['image_id']}}
+        data = json.dumps(json_str)
+        response, content = http.request(path, 'POST', headers=headers,
+                                         body=data)
+        json_return = json.loads(content)
+        self.assertEqual(response.status, 202)
+        self.assertEqual(json_return['server']['status'], "BUILD")
+        self.nova['single_server_id'] = json_return['server']['id']
+        time.sleep(5)
+        build_result = self.build_check(self.nova['single_server_id'])
+        self.assertEqual(build_result['status'], "ACTIVE")
+        self.assertEqual(build_result['ping'], True)
+    test_200_create_server.tags = ['nova']
+
+    def test_201_get_server_details(self):
+        path = self.nova['path'] + '/servers/'
+        path = path + str(self.nova['single_server_id'])
+        http = httplib2.Http()
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
+                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+
+        response, content = http.request(path, 'GET', headers=headers)
+        self.assertEqual(response.status, 200)
+    test_201_get_server_details.tags = ['nova']
+
+    @tests.skip_test("Currently Not Working")
+    def test_300_create_to_limit(self):
+        self.nova['multi_server'] = {}
+        path = self.nova['path'] + '/servers'
+        http = httplib2.Http()
+        headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token']),
+                   'Content-Type': 'application/json'}
+        for i in range(0, self.limits['POST']):
+            json_str = {"server":
+                           {
+                            "name": "test post limit %s" % (i),
+                            "flavorRef": "%s/flavors/%s" % (self.nova['path'],
+                                                            self.flavor['id']),
+                            "imageRef": self.glance['image_id']
+                           }
+                       } 
+            data = json.dumps(json_str)
+            response, content = http.request(path,
+                                             'POST',
+                                             headers=headers,
+                                             body=data)
+            json_return = json.loads(content)
+            self.nova['multi_server']["test post limit %s" % (i)] = \
+                json_return['server']['id']
+            pprint(response)
+    test_300_create_to_limit.tags = ['nova', 'nova-api']
+
+
+    def test_900_delete_server(self):
+        path = self.nova['path'] + '/servers/'
+        path = path + str(self.nova['single_server_id'])
+        http = httplib2.Http()
+        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
+                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        response, content = http.request(path, 'DELETE', headers=headers)
+        self.assertEqual(response.status, 204)
+    test_900_delete_server.tags = ['nova']
+
+    def test_997_delete_kernel_from_glance(self):
+        path = self.glance['path'] + "/images/%s" % (self.glance['kernel_id'])
+        http = httplib2.Http()
+
+        headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
+        response, content = http.request(path, 'DELETE', headers=headers)
+
+        self.assertEqual(200, response.status)
+    test_997_delete_kernel_from_glance.tags = ['glance', 'nova']
+
+    def test_998_delete_initrd_from_glance(self):
+        path = self.glance['path'] + "/images/%s" % (self.glance['ramdisk_id'])
+        http = httplib2.Http()
+
+        headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
+        response, content = http.request(path, 'DELETE', headers=headers)
+
+        self.assertEqual(200, response.status)
+    test_998_delete_initrd_from_glance.tags = ['glance', 'nova']
+
+    def test_999_delete_image_from_glance(self):
+        path = self.glance['path'] + "/images/%s" % (self.glance['image_id'])
+        http = httplib2.Http()
+
+        headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
+        response, content = http.request(path, 'DELETE', headers=headers)
+
+        self.assertEqual(200, response.status)
+    test_999_delete_image_from_glance.tags = ['glance', 'nova']

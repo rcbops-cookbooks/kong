@@ -191,6 +191,7 @@ class FunctionalTest(unittest2.TestCase):
             self.glance = {}
             gen_path = _gen_glance_path(self)
             self.limits = {}
+            self.flavor = {}
         else:
             raise Exception(
                 "A valid keystone block must be provided in the configuration."
