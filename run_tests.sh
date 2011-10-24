@@ -8,6 +8,7 @@ function usage {
   echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment"
   echo "  -f, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
   echo "  -p, --pep8               Just run pep8"
+  echo "  --keystone               Run all tests tagged as \"keystone\"."
   echo "  --nova		   Run all tests tagged as \"nova\"."
   echo "  --swift		   Run all tests tagged as \"swift\"."
   echo "  --glance		   Run all tests tagged as \"glance\"."
@@ -26,6 +27,7 @@ function process_option {
     -N|--no-virtual-env) let always_venv=0; let never_venv=1;;
     -f|--force) let force=1;;
     -p|--pep8) let just_pep8=1;;
+    --keystone) noseargs="$noseargs -a tags=keystone";;
     --nova) noseargs="$noseargs -a tags=nova";;
     --glance) noseargs="$noseargs -a tags=glance";;
     --swift) noseargs="$noseargs -a tags=swift";;
