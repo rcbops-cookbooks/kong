@@ -46,8 +46,10 @@ class TestNovaAPI(tests.FunctionalTest):
 
     @tests.skip_test("Currently Not Working")
     def test_102_verify_version_selection_json(self):
-        path = "http://%s:%s/.json" % (self.nova['host'],
-                                           self.nova['port'])
+        remove = "/v1.1/" + self.keystone['tenantid']
+        path = self.nova['path'].replace(remove, '') + "/.json"
+        # path = "http://%s:%s/.json" % (self.nova['host'],
+                                           # self.nova['port'])
         http = httplib2.Http()
         headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
         response, content = http.request(path, 'GET', headers=headers)
@@ -58,6 +60,8 @@ class TestNovaAPI(tests.FunctionalTest):
 
     @tests.skip_test("Currently Not Working")
     def test_103_verify_version_selection_xml(self):
+        remove = "/v1.1/" + self.keystone['tenantid']
+        path = self.nova['path'].replace(remove, '')
         path = "http://%s:%s/.xml" % (self.nova['host'],
                                            self.nova['port'])
         http = httplib2.Http()
