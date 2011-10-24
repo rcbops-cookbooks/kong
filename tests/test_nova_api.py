@@ -44,31 +44,27 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(len(data['versions']), 2)
     test_101_verify_version_selection_default.tags = ['nova', 'nova-api']
 
-    @tests.skip_test("Currently Not Working")
+    # @tests.skip_test("Currently Not Working")
     def test_102_verify_version_selection_json(self):
         remove = "/v1.1/" + self.keystone['tenantid']
         path = self.nova['path'].replace(remove, '') + "/.json"
-        # path = "http://%s:%s/.json" % (self.nova['host'],
-                                           # self.nova['port'])
         http = httplib2.Http()
         headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
         response, content = http.request(path, 'GET', headers=headers)
-        self.assertEqual(response.status, 200)
+        self.assertEqual(response.status, 300)
         data = json.loads(content)
-        self.assertEqual(len(data['versions']), 2)
+        self.assertEqual(len(data['choices']), 2)
     test_102_verify_version_selection_json.tags = ['nova', 'nova-api']
 
-    @tests.skip_test("Currently Not Working")
+    # @tests.skip_test("Currently Not Working")
     def test_103_verify_version_selection_xml(self):
         remove = "/v1.1/" + self.keystone['tenantid']
-        path = self.nova['path'].replace(remove, '')
-        path = "http://%s:%s/.xml" % (self.nova['host'],
-                                           self.nova['port'])
+        path = self.nova['path'].replace(remove, '') + "/.xml"
         http = httplib2.Http()
         headers = {'X-Auth-Token': self.nova['X-Auth-Token']}
         response, content = http.request(path, 'GET', headers=headers)
-        self.assertEqual(response.status, 200)
-        self.assertTrue('<versions>' in content)
+        self.assertEqual(response.status, 300)
+        self.assertTrue('<version ' in content)
     test_103_verify_version_selection_xml.tags = ['nova', 'nova-api']
 
     def test_104_bad_user_bad_key(self):
@@ -179,20 +175,18 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 401)
     test_109_no_tenant.tags = ['nova', 'nova-api']
 
-    @tests.skip_test("Currently Not Working")
+    # @tests.skip_test("Currently Not Working")
     def test_110_get_tenant_list(self):
-        if self.keystone['apiver'] == "v2.0":
-            path = self.keystone['admin_path'] + "/tenants"
-            pprint(path)
-            http = httplib2.Http()
-            body = self._keystone_json(self.keystone['user'],
-                                       self.keystone['pass'],
-                                       self.keystone['tenantid'])
-            response, content = http.request(path,
-                                'GET',
-                                body,
-                                headers={'Content-Type': 'application/json'})
-            self.assertEqual(response.status, 200)
+        path = "http://%s:%s/%s/tenants" % (self.keystone['host'],
+                                           self.keystone['port'],
+                                           self.keystone['apiver'])
+        http = httplib2.Http()
+        response, content = http.request(path,
+                            'GET',
+                            headers={'Content-Type': 'application/json',
+                                     'X-Auth-Token': self.nova['X-Auth-Token']})
+        self.assertEqual(response.status, 200)
+        pprint(content)
     test_110_get_tenant_list.tags = ['nova', 'nova-api']
 
     def test_201_verify_blank_limits(self):
@@ -217,10 +211,10 @@ class TestNovaAPI(tests.FunctionalTest):
 
     @tests.skip_test("Skipping verify extensions")
     def test_203_verify_extensions_v1_1(self):
-        path = self.nova['path'] + '/extensions'
+        remove = "/v1.1/" + self.keystone['tenantid']
+        path = self.nova['path'].replace(remove, '') + "/extensions"
         http = httplib2.Http()
-        headers = {'X-Auth-User': '%s' % (self.keystone['user']),
-                   'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'GET', headers=headers)
         self.assertEqual(response.status, 200)
         data = json.loads(content)
