@@ -194,16 +194,13 @@ class FunctionalTest(unittest2.TestCase):
             self.flavor = {}
         else:
             raise Exception(
-                "A valid keystone block must be provided in the configuration."
-            )
+            "A valid keystone block must be provided in the configuration.")
         # TODO: add support for swift from keystone service catalog
         if 'swift' in self.config:
             self.swift = setupSwift(self)
         else:
             raise Exception(
-                "A valid swift block must be provided in the configuration."
-            )
-
+            "A valid swift block must be provided in the configuration.")
 
     @classmethod
     def tearDownClass(self):

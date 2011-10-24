@@ -224,7 +224,7 @@ class TestNovaAPI(tests.FunctionalTest):
         response, content = http.request(path,
                             'GET',
                             headers={'Content-Type': 'application/json',
-                                     'X-Auth-Token': self.nova['X-Auth-Token']})
+                                 'X-Auth-Token': self.nova['X-Auth-Token']})
         self.assertEqual(response.status, 200)
     test_016_get_tenant_list.tags = ['nova', 'nova-api', 'keystone']
 
@@ -273,7 +273,7 @@ class TestNovaAPI(tests.FunctionalTest):
 
         #### PUT, POST, DELETE Rate Limits (Defaults)
         for i, l in enumerate(rate_limits):
-            for k,v in enumerate(rate_limits[i]['limit']):
+            for k, v in enumerate(rate_limits[i]['limit']):
                 if v['verb'] == "POST" and v['unit'] == "MINUTE":
                     self.limits['POST'] = v['value']
                 if v['verb'] == "PUT":
@@ -312,7 +312,7 @@ class TestNovaAPI(tests.FunctionalTest):
         self.glance['kernel_id'] = data['image']['id']
         self.assertEqual(data['image']['name'], "test-kernel")
         self.assertEqual(data['image']['checksum'], self._md5sum_file(kernel))
-    test_101_upload_kernel_to_glance.tags = ['glance', 'nova'] 
+    test_101_upload_kernel_to_glance.tags = ['glance', 'nova']
 
     def test_102_upload_initrd_to_glance(self):
         """
@@ -479,9 +479,7 @@ class TestNovaAPI(tests.FunctionalTest):
                             "name": "test post limit %s" % (i),
                             "flavorRef": "%s/flavors/%s" % (self.nova['path'],
                                                             self.flavor['id']),
-                            "imageRef": self.glance['image_id']
-                           }
-                       } 
+                            "imageRef": self.glance['image_id']}}
             data = json.dumps(json_str)
             response, content = http.request(path,
                                              'POST',
@@ -492,7 +490,6 @@ class TestNovaAPI(tests.FunctionalTest):
                 json_return['server']['id']
             pprint(response)
     test_300_create_to_limit.tags = ['nova', 'nova-api']
-
 
     def test_900_delete_server(self):
         path = self.nova['path'] + '/servers/'
