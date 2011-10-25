@@ -27,10 +27,34 @@ import hashlib
 import time
 import os
 import tests
+import subprocess
 from pprint import pprint
 
 
 class TestNovaAPI(tests.FunctionalTest):
+    def ping_host(self, address, interval, max_wait):
+        """
+        Ping a host ever <interval> seconds, up to a maximum of <max_wait>
+        seconds for until the address is succesfully pingable, or the
+        maximum wait interval has expired
+        """
+        start = time.time()
+        while(time.time() - start < max_wait):
+            try:
+                retcode = subprocess.call('ping -c1 -q %s > /dev/null 2>&1' % address,
+                                          shell=True)
+                if retcode == 0:
+                    return True
+            except OSError, e:
+                print "Error running external ping command: ", e
+                print retcode
+                return False
+
+            time.sleep(2)
+
+
+        return False
+
     def build_check(self, id):
         self.result = {}
         """
@@ -58,15 +82,12 @@ class TestNovaAPI(tests.FunctionalTest):
 
         # Get IP Address of newly created server
         net = data['server']['addresses'][self.config['nova']['network_label']]
+        self.result['ping'] = False
+
         if net:
             for i in net:
-                try:
-                    r = "" . join(os.popen('ping -c 5 -w 60 %s' %
-                        (i['addr'])).readlines())
-                    if r.find('64 bytes') > 1:
-                        self.result['ping'] = True
-                except:
-                    self.result['ping'] = False
+                if self.ping_host(i['addr'], 5, 60):
+                    self.result['ping'] = True
                     return self.result
         else:
             raise Exception("network_label is a required configuration value.")
