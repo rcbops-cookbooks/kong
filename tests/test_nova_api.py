@@ -72,7 +72,8 @@ class TestNovaAPI(tests.FunctionalTest):
         data = json.loads(content)
 
         # Get Server status exit when active
-        while (data['server']['status'] != 'ACTIVE'):
+        # (rp) if it isn't active in two minutes, it won't be
+        while ((data['server']['status'] != 'ACTIVE') and (count < 120)):
             response, content = http.request(path, 'GET', headers=headers)
             data = json.loads(content)
             time.sleep(5)
