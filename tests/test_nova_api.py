@@ -61,7 +61,7 @@ class TestNovaAPI(tests.FunctionalTest):
         if net:
             for i in net:
                 try:
-                    r = "" . join(os.popen('ping -c5 %s' %
+                    r = "" . join(os.popen('ping -c 5 -w 60 %s' %
                         (i['addr'])).readlines())
                     if r.find('64 bytes') > 1:
                         self.result['ping'] = True
