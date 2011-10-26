@@ -520,7 +520,7 @@ class TestNovaAPI(tests.FunctionalTest):
 
         # API allows us to overrun by one so accounting for that
         # in the result.
-        self.assertEqual(self.limits['POST']),
+        self.assertEqual(self.limits['POST'],
                         len(self.nova['multi_server']))
         self.assertEqual(1, len(self.nova['multi_fails']))
 
