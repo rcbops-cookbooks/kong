@@ -41,7 +41,8 @@ class TestNovaAPI(tests.FunctionalTest):
         start = time.time()
         while(time.time() - start < max_wait):
             try:
-                retcode = subprocess.call('ping -c1 -q %s > /dev/null 2>&1' % address,
+                retcode = subprocess.call('ping -c1 -q %s > /dev/null 2>&1'
+                                          % (address),
                                           shell=True)
                 if retcode == 0:
                     return True
@@ -51,8 +52,6 @@ class TestNovaAPI(tests.FunctionalTest):
                 return False
 
             time.sleep(2)
-
-
         return False
 
     def build_check(self, id):
@@ -488,14 +487,19 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 200)
     test_201_get_server_details.tags = ['nova']
 
-    @tests.skip_test("Currently Not Working")
-    def test_300_create_to_limit(self):
+    # @tests.skip_test("Currently Not Working")
+    def test_300_create_to_postpm_limit(self):
         self.nova['multi_server'] = {}
+        self.nova['multi_fails'] = {}
         path = self.nova['path'] + '/servers'
         http = httplib2.Http()
         headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token']),
                    'Content-Type': 'application/json'}
-        for i in range(0, self.limits['POST']):
+
+        # It appears that nova allows you to overrun the limit by 1.
+        # We are trying to get a failure so adding 2 to limit
+        # provided by API.
+        for i in range(0, (2 + self.limits['POST'])):
             json_str = {"server":
                            {
                             "name": "test post limit %s" % (i),
@@ -508,10 +512,23 @@ class TestNovaAPI(tests.FunctionalTest):
                                              headers=headers,
                                              body=data)
             json_return = json.loads(content)
-            self.nova['multi_server']["test post limit %s" % (i)] = \
-                json_return['server']['id']
-            pprint(response)
-    test_300_create_to_limit.tags = ['nova', 'nova-api']
+            if response.status == 202:
+                self.nova['multi_server']["test post limit %s" % (i)] = \
+                    json_return['server']['id']
+            else:
+                self.nova['multi_fails'] = [i]
+
+        # API allows us to overrun by one so accounting for that
+        # in the result.
+        self.assertEqual((1 + self.limits['POST']),
+                        len(self.nova['multi_server']))
+        self.assertEqual(1, len(self.nova['multi_fails']))
+
+        for i, name in enumerate(self.nova['multi_server']):
+            build_result = self.build_check(
+                               self.nova['multi_server'][str(name)])
+            self.assertEqual(build_result['ping'], True)
+    test_300_create_to_postpm_limit.tags = ['nova', 'nova-api']
 
     def test_900_delete_server(self):
         path = self.nova['path'] + '/servers/'
@@ -522,6 +539,16 @@ class TestNovaAPI(tests.FunctionalTest):
         response, content = http.request(path, 'DELETE', headers=headers)
         self.assertEqual(response.status, 204)
     test_900_delete_server.tags = ['nova']
+
+    def test_996_delete_multi_server(self):
+        http = httplib2.Http()
+        headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        for i, name in enumerate(self.nova['multi_server']):
+            path = self.nova['path'] + '/servers/' + str(
+                        self.nova['multi_server'][name])
+            response, content = http.request(path, 'DELETE', headers=headers)
+            self.assertEqual(response.status, 204)
+    test_996_delete_multi_server.tags = ['nova']
 
     def test_997_delete_kernel_from_glance(self):
         path = self.glance['path'] + "/images/%s" % (self.glance['kernel_id'])
