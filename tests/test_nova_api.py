@@ -499,7 +499,7 @@ class TestNovaAPI(tests.FunctionalTest):
         # It appears that nova allows you to overrun the limit by 1.
         # We are trying to get a failure so adding 2 to limit
         # provided by API.
-        for i in range(0, (2 + self.limits['POST'])):
+        for i in range(0, (1 + self.limits['POST'])):
             json_str = {"server":
                            {
                             "name": "test post limit %s" % (i),
