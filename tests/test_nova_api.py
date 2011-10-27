@@ -487,7 +487,7 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 200)
     test_201_get_server_details.tags = ['nova']
 
-    @tests.skip_test("Requires hardware")
+    @tests.skip_test("Skipping multi-instance tests")
     def test_300_create_to_postpm_limit(self):
         self.nova['multi_server'] = {}
         self.nova['multi_fails'] = {}
@@ -540,6 +540,8 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 204)
     test_900_delete_server.tags = ['nova']
 
+    
+    @tests.skip_test("Skipping multi-instance tests")
     def test_996_delete_multi_server(self):
         http = httplib2.Http()
         headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
