@@ -540,7 +540,6 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 204)
     test_900_delete_server.tags = ['nova']
 
-    
     @tests.skip_test("Skipping multi-instance tests")
     def test_996_delete_multi_server(self):
         http = httplib2.Http()
