@@ -487,7 +487,7 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 200)
     test_201_get_server_details.tags = ['nova']
 
-    # @tests.skip_test("Currently Not Working")
+    @tests.skip_test("Requires hardware")
     def test_300_create_to_postpm_limit(self):
         self.nova['multi_server'] = {}
         self.nova['multi_fails'] = {}
@@ -499,7 +499,6 @@ class TestNovaAPI(tests.FunctionalTest):
         # It appears that nova allows you to overrun the limit by 1.
         # We are trying to get a failure so adding 2 to limit
         # provided by API.
-        self.limits['POST'] = 4
         for i in range(0, self.limits['POST']):
             json_str = {"server":
                            {
@@ -523,7 +522,7 @@ class TestNovaAPI(tests.FunctionalTest):
         # in the result.
         self.assertEqual(self.limits['POST'],
                         len(self.nova['multi_server']))
-        # self.assertEqual(1, len(self.nova['multi_fails']))
+        self.assertEqual(1, len(self.nova['multi_fails']))
 
         for i, name in enumerate(self.nova['multi_server']):
             build_result = self.build_check(
