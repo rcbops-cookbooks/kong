@@ -482,7 +482,23 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(build_result['ping'], True)
     test_200_create_server.tags = ['nova']
 
-    def test_201_get_server_details(self):
+    def test_201_list_servers(self):
+        match = False
+        path = self.nova['path'] + '/servers/detail'
+        http = httplib2.Http()
+        headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        response, content = http.request(path, 'GET', headers=headers)
+        json_return = json.loads(content)
+        self.assertEqual(response.status, 200)
+
+        for i in json_return['servers']:
+            if i['id'] == self.nova['single_server_id']:
+                match = True
+
+        self.assertEqual(match, True)
+    test_201_list_servers.tags = ['nova']
+
+    def test_202_get_server_details(self):
         path = self.nova['path'] + '/servers/'
         path = path + str(self.nova['single_server_id'])
         http = httplib2.Http()
@@ -491,7 +507,7 @@ class TestNovaAPI(tests.FunctionalTest):
 
         response, content = http.request(path, 'GET', headers=headers)
         self.assertEqual(response.status, 200)
-    test_201_get_server_details.tags = ['nova']
+    test_202_get_server_details.tags = ['nova']
 
     @tests.skip_test("Skipping multi-instance tests")
     def test_300_create_to_postpm_limit(self):
