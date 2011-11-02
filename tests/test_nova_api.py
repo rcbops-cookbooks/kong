@@ -263,10 +263,9 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertNotEqual(content, '{"flavors": []}')
     test_020_list_flavors_v1_1.tags = ['nova', 'nova-api']
 
-    @tests.skip_test("Skipping verify extensions")
+    # @tests.skip_test("Skipping verify extensions")
     def test_021_verify_extensions_v1_1(self):
-        remove = "/v1.1/" + self.keystone['tenantid']
-        path = self.nova['path'].replace(remove, '') + "/extensions"
+        path = self.nova['path'] + "/extensions"
         http = httplib2.Http()
         headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
         response, content = http.request(path, 'GET', headers=headers)
