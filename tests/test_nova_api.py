@@ -509,6 +509,18 @@ class TestNovaAPI(tests.FunctionalTest):
         self.assertEqual(response.status, 200)
     test_202_get_server_details.tags = ['nova']
 
+    def test_203_update_server(self):
+        path = self.nova['path'] + '/servers/'\
+                + str(self.nova['single_server_id'])
+        json_put = json.dumps({"server":
+                                    {"name": "testing server updated"}})
+        headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token']),
+                   'Content-Type': 'application/json'}
+        http = httplib2.Http()
+        response, content = http.request(path, 'GET', headers=headers)
+        self.assertEqual(response.status, 200)
+    test_203_update_server.tags = ['nova']
+
     @tests.skip_test("Skipping multi-instance tests")
     def test_300_create_to_postpm_limit(self):
         self.nova['multi_server'] = {}
