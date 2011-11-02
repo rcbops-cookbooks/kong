@@ -271,7 +271,6 @@ class TestNovaAPI(tests.FunctionalTest):
         response, content = http.request(path, 'GET', headers=headers)
         self.assertEqual(response.status, 200)
         data = json.loads(content)
-        pprint(data['extensions'])
         required_extensions = {'os-simple-tenant-usage': 1,
                                'os-hosts': 1,
                                'ADMIN': 1,
@@ -280,7 +279,15 @@ class TestNovaAPI(tests.FunctionalTest):
                                'os-create-server-ext': 1,
                                'os-keypairs': 1,
                                'os-floating-ips': 1}
-        self.assertNotEqual(content, '{"flavors": []}')
+
+        for i in required_extensions:
+            for j in data['extensions']:
+                if j['alias'] == i:
+                    required = True
+                else:
+                    required = i
+
+        self.assertEqual(required, True)
     test_021_verify_extensions_v1_1.tags = ['nova', 'nova-api']
 
     def test_022_verify_not_blank_limits(self):
