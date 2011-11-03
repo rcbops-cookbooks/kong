@@ -82,6 +82,7 @@ class TestNovaAPI(tests.FunctionalTest):
 
         # Get IP Address of newly created server
         net = data['server']['addresses'][self.config['nova']['network_label']]
+        self.nova['address'] = net
         self.result['ping'] = False
 
         if net:
@@ -512,14 +513,33 @@ class TestNovaAPI(tests.FunctionalTest):
     def test_203_update_server(self):
         path = self.nova['path'] + '/servers/'\
                 + str(self.nova['single_server_id'])
+        name = "updated"
+        match = False
         json_put = json.dumps({"server":
-                                    {"name": "testing server updated"}})
+                                    {"name": name}})
         headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token']),
                    'Content-Type': 'application/json'}
         http = httplib2.Http()
-        response, content = http.request(path, 'GET', headers=headers)
+        response, content = http.request(path,
+                                         'PUT',
+                                         headers=headers,
+                                         body=json_put)
         self.assertEqual(response.status, 200)
+        json_return = json.loads(content)
+        for i in json_return['server']:
+            if i[0]['name'] == name:
+                match = True
+        self.assertEqual(match, True)
     test_203_update_server.tags = ['nova']
+
+    def test_210_list_addresses(self):
+        path = self.nova['path'] + '/servers/'\
+                    + str(self.nova['single_server_id']) + 'ips'
+        headers = {'X-Auth-Token': '%s' % (self.nova['X-Auth-Token'])}
+        http = httplib2.Http()
+        response, content = http.request(path, 'GET', headers=headers)
+        json_return = json.loads(content)
+    test_210_list_addresses.tags = ['nova']
 
     @tests.skip_test("Skipping multi-instance tests")
     def test_300_create_to_postpm_limit(self):
