@@ -106,7 +106,9 @@ class FunctionalTest(unittest2.TestCase):
             path = "http://%s:%s/%s/tokens" % (self.config['keystone']['host'],
                                              self.config['keystone']['port'],
                                              self.config['keystone']['apiver'])
-            if self.config['keystone']['apiver'] == "v2.0":
+            if self.config['keystone']['apiver'] == 'v2.0':
+                self.keystone['subversion'] = 'a'
+
                 body = {"passwordCredentials": {
                                       "username": self.keystone['user'],
                                       "password": self.keystone['pass']},
@@ -116,10 +118,28 @@ class FunctionalTest(unittest2.TestCase):
                 response, content = http.request(post_path, 'POST',
                                  post_data,
                                  headers={'Content-Type': 'application/json'})
+                if response.status != 200:
+                    # try again... with yet another 2.0 style
+                    self.keystone['subversion'] = 'b'
+                    body = { "auth": { "passwordCredentials": {
+                                "username": self.keystone['user'],
+                                "password": self.keystone['pass'] }}}
+                    post_data = json.dumps(body)
+                    response, content = http.request(post_path, 'POST',
+                                                     post_data,
+                                                     headers={'Content-Type': 'application/json'})
+
                 if response.status == 200:
                     decode = json.loads(content)
-                    self.keystone['catalog'] = decode['auth']['serviceCatalog']
-                    return decode['auth']['token']['id'].encode('utf-8')
+                    meaningless_cruft = 'auth'
+                    if self.keystone['subversion'] == 'b':
+                        meaningless_cruft = 'access'
+
+                    self.keystone['catalog'] = decode[meaningless_cruft]['serviceCatalog']
+
+                    print json.dumps(self.keystone['catalog'], indent=2)
+                    return decode[meaningless_cruft]['token']['id'].encode('utf-8')
+
             if self.config['keystone']['apiver'] == "v1.0":
                 headers = {'X-Auth-User': self.keystone['user'],
                            'X-Auth-Key': self.keystone['key']}
@@ -129,20 +149,30 @@ class FunctionalTest(unittest2.TestCase):
             else:
                 raise Exception("Unable to get a valid token, please fix")
 
+        def _endpoint_for(self, service, region, path):
+            if self.keystone['subversion'] == 'a':
+                for k, v in enumerate(self.keystone['catalog'][service]):
+                    if v['region'] == region:
+                        return str(v[path])
+            elif self.keystone['subversion'] == 'b':
+                for endpoint_list in self.keystone['catalog']:
+                    if endpoint_list['name'] == service:
+                        for endpoint in endpoint_list['endpoints']:
+                            if endpoint['region'] == region:
+                                return str(endpoint[path])
+
+            raise Exception("You've been keystoned -- can't find endpoint for %s/%s/%s" % (service,region,path))
+
         def _gen_nova_path(self):
-            for k, v in enumerate(self.keystone['catalog']['nova']):
-                if v['region'] == self.keystone['region']:
-                    self.nova['path'] = str(v['publicURL'])
-                    self.nova['adminPath'] = str(v['adminURL'])
+            self.nova['path'] = _endpoint_for(self, 'nova', self.keystone['region'], 'publicURL')
+            self.nova['adminPath'] = _endpoint_for(self, 'nova', self.keystone['region'], 'adminURL')
                     return True
             raise Exception(
                 "Cannot find region defined in configuration file.")
 
         def _gen_glance_path(self):
-            for k, v in enumerate(self.keystone['catalog']['glance']):
-                if v['region'] == self.keystone['region']:
-                    self.glance['path'] = str(v['publicURL'])
-                    self.glance['adminPath'] = str(v['adminURL'])
+            self.glance['path'] = _endpoint_for(self, 'glance', self.keystone['region'], 'publicURL')
+            self.glance['adminPath'] = _endpoint_for(self, 'glance', self.keystone['region'], 'adminURL')
                     return True
             raise Exception(
                 "Cannot find region defined in configuration file.")
