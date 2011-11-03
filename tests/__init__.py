@@ -166,14 +166,14 @@ class FunctionalTest(unittest2.TestCase):
         def _gen_nova_path(self):
             self.nova['path'] = _endpoint_for(self, 'nova', self.keystone['region'], 'publicURL')
             self.nova['adminPath'] = _endpoint_for(self, 'nova', self.keystone['region'], 'adminURL')
-                    return True
+            return True
             raise Exception(
                 "Cannot find region defined in configuration file.")
 
         def _gen_glance_path(self):
             self.glance['path'] = _endpoint_for(self, 'glance', self.keystone['region'], 'publicURL')
             self.glance['adminPath'] = _endpoint_for(self, 'glance', self.keystone['region'], 'adminURL')
-                    return True
+            return True
             raise Exception(
                 "Cannot find region defined in configuration file.")
 
