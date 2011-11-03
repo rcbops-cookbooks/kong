@@ -537,6 +537,7 @@ class TestNovaAPI(tests.FunctionalTest):
         http = httplib2.Http()
         response, content = http.request(path, 'GET', headers=headers)
         json_return = json.loads(content)
+        pprint(json_return)
     test_210_list_addresses.tags = ['nova']
 
     @tests.skip_test("Skipping multi-instance tests")
