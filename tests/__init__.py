@@ -137,7 +137,7 @@ class FunctionalTest(unittest2.TestCase):
 
                     self.keystone['catalog'] = decode[meaningless_cruft]['serviceCatalog']
 
-                    print json.dumps(self.keystone['catalog'], indent=2)
+                    # print json.dumps(self.keystone['catalog'], indent=2)
                     return decode[meaningless_cruft]['token']['id'].encode('utf-8')
 
             if self.config['keystone']['apiver'] == "v1.0":
