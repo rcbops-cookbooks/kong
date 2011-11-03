@@ -526,10 +526,7 @@ class TestNovaAPI(tests.FunctionalTest):
                                          body=json_put)
         self.assertEqual(response.status, 200)
         json_return = json.loads(content)
-        for i in json_return['server']:
-            if i[0]['name'] == name:
-                match = True
-        self.assertEqual(match, True)
+        self.assertEqual(json_return['server']['name'], name)
     test_203_update_server.tags = ['nova']
 
     def test_210_list_addresses(self):
