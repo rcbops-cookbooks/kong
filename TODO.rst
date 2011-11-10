@@ -9,11 +9,11 @@ Horizon
 
 Glance
 ------
-  * verify public/private attributes restrict images to a single tenant
+- verify public/private attributes restrict images to a single tenant
 
 Nova
 ----
 
 Swift
 -----
-- 
+
