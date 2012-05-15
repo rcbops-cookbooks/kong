@@ -85,14 +85,13 @@ rabbit, something, arbitary_value = Chef::Search::Query.new.search(:node, "roles
 end
 
 # lookup swift details from swift proxy server
-  # Lookup keystone api ip address
-#  swift, start, arbitary_value = Chef::Search::Query.new.search(:node, "roles:swift-proxy-server AND chef_environment:#{node.chef_environment}")
-#  if swift.length > 0
-#    Chef::Log.info("kong::default/swift: using search")
-#    :swift_auth_type = swift[0]["swift"]["authmode"]
-#  else
-#    Chef::Log.info("kong::default/swift NOT using search")
-#    :swift_auth_type = node["swift"]["authmode"]
+  swift, start, arbitary_value = Chef::Search::Query.new.search(:node, "roles:swift-proxy-server AND chef_environment:#{node.chef_environment}")
+  if swift.length > 0
+    Chef::Log.info("kong::default/swift: using search")
+    :swift_auth_type = swift[0]["swift"]["authmode"]
+  else
+    Chef::Log.info("kong::default/swift NOT using search")
+    :swift_auth_type = node["swift"]["authmode"]
 
 template "/opt/kong/etc/config.ini" do
   source "config.ini.erb"
@@ -118,7 +117,7 @@ template "/opt/kong/etc/config.ini" do
     :swift_account => node["swift"]["account"],
     :swift_user => node["swift"]["username"],
     :swift_pass => node["swift"]["password"],
-    :swift_auth_type => node["swift"]["auth_type"]
+    :swift_auth_type => swift_auth_type
   )
 end
 
