@@ -1,6 +1,8 @@
 
-package %w{git curl python-virtualenv} do
-  action :install
+%w{git curl python-virtualenv}.each do |pkg|
+  package |pkg| do
+    action :install
+  end
 end
 
 execute "git clone https://github.com/rcbops/kong" do
