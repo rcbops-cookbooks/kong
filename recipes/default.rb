@@ -1,13 +1,5 @@
 
-package "git" do
-  action :install
-end
-
-package "curl" do
-  action :install
-end
-
-package "python-virtualenv" do
+package %w{git curl python-virtualenv} do
   action :install
 end
 
@@ -19,7 +11,7 @@ execute "git clone https://github.com/rcbops/kong" do
 end
 
 execute "checkout kong branch" do
-  command "git checkout #{node[:kong][:branch]}"
+  command "git checkout #{node['kong']['branch']}"
   cwd "/opt/kong"
   user "root"
 end
