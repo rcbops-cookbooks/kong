@@ -77,10 +77,13 @@ rabbit, something, arbitary_value = Chef::Search::Query.new.search(:node, "roles
     rabbit_ip_address = rabbit[0]["ipaddress"]
     rabbit_user = rabbit[0]["rabbitmq"]["default_user"]
     rabbit_password = rabbit[0]["rabbitmq"]["default_pass"]
-  else
+  elsif node.has_key?("rabbitmq")
     Chef::Log.info("nova-common/rabbitmq: NOT using search")
     rabbit_ip_address = node["ipaddress"]
     rabbit_user = node["rabbitmq"]["default_user"]
+  else
+    rabbit_ip_address = node["ipaddress"]
+    rabbit_user = "something_innocuous_that_breaks_nothing"
   end
 end
 
