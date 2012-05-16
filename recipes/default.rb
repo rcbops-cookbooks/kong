@@ -88,10 +88,11 @@ end
   swift, start, arbitary_value = Chef::Search::Query.new.search(:node, "roles:swift-proxy-server AND chef_environment:#{node.chef_environment}")
   if swift.length > 0
     Chef::Log.info("kong::default/swift: using search")
-    :swift_auth_type = swift[0]["swift"]["authmode"]
+    swift_auth_type = swift[0]["swift"]["authmode"]
   else
     Chef::Log.info("kong::default/swift NOT using search")
-    :swift_auth_type = node["swift"]["authmode"]
+    swift_auth_type = node["swift"]["authmode"]
+  end
 
 template "/opt/kong/etc/config.ini" do
   source "config.ini.erb"
