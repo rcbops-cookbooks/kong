@@ -1,6 +1,6 @@
 
 %w{git curl python-virtualenv}.each do |pkg|
-  package |pkg| do
+  package pkg do
     action :install
   end
 end
