@@ -38,9 +38,9 @@ else
   keystone, start, arbitary_value = Chef::Search::Query.new.search(:node, "roles:keystone AND chef_environment:#{node.chef_environment}")
   if keystone.length > 0
     Chef::Log.info("kong::default/keystone: using search")
-      keystone_admin_username = "admin"
-      keystone_admin_password = keystone[0]["keystone"]["users"]["admin"]["password"]
-      keystone_admin_tenantname = keystone[0]["keystone"]["users"]["admin"]["default_tenant"]
+      keystone_admin_user = keystone[0]['keystone']['admin_user']
+      keystone_admin_password = keystone[0]['keystone']['users'][keystone_admin_user]['password']
+      keystone_admin_tenantname = keystone[0]['keystone']['users'][keystone_admin_user]['default_tenant']
       keystone_internal_url = keystone[0]["keystone"]["internalURL"]
       keystone_admin_url = keystone[0]["keystone"]["adminURL"]
       keystone_admin_token = keystone[0]["keystone"]["admin_token"]
@@ -52,9 +52,9 @@ else
       keystone_service_port = keystone[0]["keystone"]["service_port"]
   else
     Chef::Log.info("kong::default/keystone: NOT using search")
-      keystone_admin_username = "admin"
-      keystone_admin_password = node["keystone"]["users"]["admin"]["password"]
-      keystone_admin_tenantname = node["keystone"]["users"]["admin"]["default_tenant"]
+      keystone_admin_user = ['keystone']['admin_user']
+      keystone_admin_password = node['keystone']['users'][keystone_admin_user]['password']
+      keystone_admin_tenantname = node['keystone']['users'][keystone_admin_user]['default_tenant']
       keystone_internal_url = node["keystone"]["internalURL"]
       keystone_admin_url = node["keystone"]["adminURL"]
       keystone_admin_token = node["keystone"]["admin_token"]
@@ -101,7 +101,7 @@ template "/opt/kong/etc/config.ini" do
     :keystone_service_port => keystone_service_port,
     :keystone_admin_port => keystone_admin_port,
     :keystone_apiver => node["keystone"]["api_version"],
-    :keystone_user => keystone_admin_username,
+    :keystone_user => keystone_admin_user,
     :keystone_pass => keystone_admin_password,
     :keystone_tenantid => keystone_admin_tenantname,
     :keystone_region => 'RegionOne',
