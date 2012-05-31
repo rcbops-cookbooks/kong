@@ -17,7 +17,7 @@ auth_type = <%= @swift_auth_type %>
 network_label = <%= @nova_network_label %>
 
 [KongRequester]
-auth_url = <%= @keystone_auth_uri %>
+auth_url = <%= @ks_service_endpoint["scheme"] %>://<%= @ks_service_endpoint["host"] %>:<%= @ks_service_endpoint["port"] %>
 user = <%= @keystone_user %>
 password = <%= @keystone_pass %>
 tenantname = <%= @keystone_tenant %>

@@ -61,7 +61,7 @@ template "/opt/kong/etc/config.ini" do
   group "root"
   mode "0644"
   variables(
-    "keystone_auth_uri" => ks_service_endpoint["uri"],
+    "ks_service_endpoint" => ks_service_endpoint,
     "keystone_region" => 'RegionOne',
     "keystone_user" => keystone_admin_user,
     "keystone_pass" => keystone_admin_password,
