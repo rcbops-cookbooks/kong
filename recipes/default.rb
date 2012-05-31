@@ -37,7 +37,14 @@ keystone_admin_user = keystone["admin_user"]
 keystone_admin_password = keystone["users"][keystone_admin_user]["password"]
 keystone_admin_tenant = keystone["users"][keystone_admin_user]["default_tenant"]
 swift_proxy_endpoint = get_access_endpoint("swift-proxy-server", "swift", "proxy")
+
+# This is ghetto.. but i am trying to get nova allinone working
 swift = get_settings_by_role("swift-proxy-server", "swift")
+if swift.nil?
+  swift_authmode = "swauth"
+else
+  swift_authmode = swift["authmode"]
+end
 
 ssl_auth = "no"
 if swift_proxy_endpoint["scheme"] == "https"
