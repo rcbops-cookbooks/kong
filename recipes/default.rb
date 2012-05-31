@@ -37,18 +37,22 @@ keystone_admin_user = keystone["admin_user"]
 keystone_admin_password = keystone["users"][keystone_admin_user]["password"]
 keystone_admin_tenant = keystone["users"][keystone_admin_user]["default_tenant"]
 swift_proxy_endpoint = get_access_endpoint("swift-proxy-server", "swift", "proxy")
-
-# This is ghetto.. but i am trying to get nova allinone working
 swift = get_settings_by_role("swift-proxy-server", "swift")
-if swift.nil?
-  swift_authmode = "swauth"
-else
+
+swift_authmode = "swauth"
+if not swift.nil?
   swift_authmode = swift["authmode"]
 end
 
 ssl_auth = "no"
-if swift_proxy_endpoint["scheme"] == "https"
-    ssl_auth = "yes"
+swift_proxy_host = ""
+swift_proxy_port = ""
+if not swift_proxy_endpoint.nil?
+    if swift_proxy_endpoint["scheme"] == "https"
+        ssl_auth = "yes"
+    end
+    swift_proxy_host = swift_proxy_endpoint["host"]
+    swift_proxy_port = swift_proxy_endpoint["port"]
 end
 
 template "/opt/kong/etc/config.ini" do
@@ -63,11 +67,11 @@ template "/opt/kong/etc/config.ini" do
     "keystone_pass" => keystone_admin_password,
     "keystone_tenant" => keystone_admin_tenant,
     "nova_network_label" => node["nova"]["network_label"],
-    "swift_proxy_host" => swift_proxy_endpoint["host"],
-    "swift_proxy_port" => swift_proxy_endpoint["port"],
+    "swift_proxy_host" => swift_proxy_host,
+    "swift_proxy_port" => swift_proxy_port,
     "swift_auth_prefix" => "/auth/",
     "swift_ssl_auth" => ssl_auth,
-    "swift_auth_type" => swift["authmode"],
+    "swift_auth_type" => swift_authmode,
     "swift_account" => node["swift"]["account"],
     "swift_user" => node["swift"]["username"],
     "swift_pass" => node["swift"]["password"]
