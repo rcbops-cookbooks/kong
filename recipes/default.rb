@@ -30,7 +30,7 @@ end
   execute "grab the sample_vm #{image}" do
     cwd "/tmp/images"
     user "root"
-    command "curl http://c250663.r63.cf1.rackcdn.com/ttylinux.tgz | tar -zx"
+    command "curl http://c250663.r63.cf1.rackcdn.com/ttylinux.tgz | tar -zx -C tty/"
     not_if do File.exists?("/tmp/images/tty/#{image}") end
   end
 
