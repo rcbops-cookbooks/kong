@@ -18,11 +18,20 @@ execute "checkout kong branch" do
   user "root"
 end
 
-execute "grab the sample_vm" do
-  cwd "/opt/kong/include/sample_vm"
-  user "root"
-  command "curl http://c250663.r63.cf1.rackcdn.com/ttylinux.tgz | tar -zx"
-  not_if do File.exists?("/opt/kong/include/sample_vm/ttylinux.img") end
+%w{ttylinux.img ttylinux-vmlinuz ttylinux-initrd}.each do |image|
+  execute "grab the sample_vm #{image}" do
+    cwd "/tmp/images"
+    user "root"
+    command "curl http://c250663.r63.cf1.rackcdn.com/ttylinux.tgz | tar -zx"
+    not_if do File.exists?("/tmp/images/tty/#{image}") end
+  end
+
+  execute "copy sample_vm #{image} " do
+    cwd "/opt/kong/include/sample_vm"
+    user "root"
+    command "cp /tmp/images/tty/#{image} /opt/kong/include/sample_vm/#{image}"
+    not_if do File.exists?("/opt/kong/include/sample_vm/#{image}") end
+  end 
 end
 
 execute "install virtualenv" do
