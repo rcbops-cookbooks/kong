@@ -18,6 +18,14 @@ execute "checkout kong branch" do
   user "root"
 end
 
+directory "/tmp/images/tty" do
+  action :create
+  group "root"
+  owner "root"
+  mode "0700"
+  recursive true
+end
+
 %w{ttylinux.img ttylinux-vmlinuz ttylinux-initrd}.each do |image|
   execute "grab the sample_vm #{image}" do
     cwd "/tmp/images"
