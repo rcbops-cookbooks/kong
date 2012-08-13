@@ -137,6 +137,7 @@ template "/opt/kong/etc/config.ini" do
             "swift_pass" => node["swift"]["password"],
             "swift_store_auth_address" => swift_store_auth_address,
             "swift_store_user" => swift_store_user,
+            "swift_store_key" => swift_store_key,
             "swift_store_tenant" => swift_store_tenant
             )
 end
