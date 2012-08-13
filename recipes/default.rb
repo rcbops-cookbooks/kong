@@ -86,7 +86,7 @@ swift_store_key = "swift_store_key"
 swift_store_container = "container"
 
 if glance && glance["api"]["swift_store_auth_address"].nil?
-  swift_store_auth_address="http://#{ks_service_endpoint["host"]}:#{ks_service_endpoint["port"]}/v2.0"
+  swift_store_auth_address="http://#{ks_service_endpoint["host"]}:#{ks_service_endpoint["port"]}"
   swift_store_tenant="#{glance["service_tenant_name"]}"
   swift_store_user="#{glance["service_user"]}"
   swift_store_key=glance["service_pass"]
