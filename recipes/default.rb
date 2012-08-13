@@ -138,7 +138,8 @@ template "/opt/kong/etc/config.ini" do
             "swift_store_auth_address" => swift_store_auth_address,
             "swift_store_user" => swift_store_user,
             "swift_store_key" => swift_store_key,
-            "swift_store_tenant" => swift_store_tenant
+            "swift_store_tenant" => swift_store_tenant,
+            "swift_store_container" => swift_store_container
             )
 end
 
