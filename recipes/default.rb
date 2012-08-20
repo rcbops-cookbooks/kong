@@ -84,7 +84,6 @@ swift_store_user = "swift_store_user"
 swift_store_tenant = "swift_store_tenant"
 swift_store_key = "swift_store_key"
 swift_store_container = "container"
-swift_store_region = "RegionOne"
 
 if glance && glance["api"]["swift_store_auth_address"].nil?
   swift_store_auth_address="http://#{ks_service_endpoint["host"]}:#{ks_service_endpoint["port"]}"
@@ -92,7 +91,11 @@ if glance && glance["api"]["swift_store_auth_address"].nil?
   swift_store_user=glance["service_user"]
   swift_store_key=glance["service_pass"]
   swift_store_container = glance["api"]["swift"]["store_container"]
-  swift_store_region=node["kong"]["swift_store_region"]
+  if node["kong"]["swift_store_region"].nil?
+      swift_store_region="RegionOne"
+  else
+      swift_store_region=node["kong"]["swift_store_region"]
+  end
 elsif glance
   swift_store_auth_address=glance["api"]["swift_store_auth_address"]
   swift_store_user=glance["api"]["swift_store_user"]
