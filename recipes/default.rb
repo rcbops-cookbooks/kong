@@ -91,17 +91,18 @@ if glance && glance["api"]["swift_store_auth_address"].nil?
   swift_store_user=glance["service_user"]
   swift_store_key=glance["service_pass"]
   swift_store_container = glance["api"]["swift"]["store_container"]
-  if node["kong"]["swift_store_region"].nil?
-      swift_store_region="RegionOne"
-  else
-      swift_store_region=node["kong"]["swift_store_region"]
-  end
+  swift_store_region="RegionOne"
 elsif glance
   swift_store_auth_address=glance["api"]["swift_store_auth_address"]
   swift_store_user=glance["api"]["swift_store_user"]
   swift_store_tenant=glance["api"]["swift_store_tenant"]
   swift_store_key=glance["api"]["swift_store_key"]
   swift_store_container = glance["api"]["swift"]["store_container"]
+  if node["kong"]["swift_store_region"].nil?
+      swift_store_region="RegionOne"
+  else
+      swift_store_region=node["kong"]["swift_store_region"]
+  end
 end
 
 swift_authmode = "swauth"
