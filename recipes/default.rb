@@ -91,6 +91,11 @@ if glance && glance["api"]["swift_store_auth_address"].nil?
   swift_store_user=glance["service_user"]
   swift_store_key=glance["service_pass"]
   swift_store_container = glance["api"]["swift"]["store_container"]
+  if node["kong"]["swift_store_region"].nil?
+      swift_store_region="RegionOne"
+  else
+      swift_store_region=node["kong"]["swift_store_region"]
+  end
 elsif glance
   swift_store_auth_address=glance["api"]["swift_store_auth_address"]
   swift_store_user=glance["api"]["swift_store_user"]
@@ -127,6 +132,7 @@ template "/opt/kong/etc/config.ini" do
             "keystone_pass" => keystone_admin_password,
             "keystone_tenant" => keystone_admin_tenant,
             "nova_network_label" => node["nova"]["network_label"],
+            "swift_store_region" => swift_store_region,
             "swift_proxy_host" => swift_proxy_host,
             "swift_proxy_port" => swift_proxy_port,
             "swift_auth_prefix" => "/auth/",

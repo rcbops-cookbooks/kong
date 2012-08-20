@@ -8,3 +8,5 @@ default["swift"]["password"] = "password"
 default["nova"]["network_label"] = "public"
 
 default["kong"]["branch"] = "master"
+
+default["swift"]["swift_store_region"] = "RegionOne"

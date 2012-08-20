@@ -42,6 +42,10 @@ Attributes
 * `nova["network_label"]` = "public"  
 * `kong["branch"]` = "master"
 
+-- when testing swift with cloudfiles backed glance the following is needed:
+
+* `swift["swift_store_region"]` - Region in Rackspace Cloud Files to use for data store
+
 
 Templates
 =====
