@@ -42,6 +42,10 @@ Attributes
 * `nova["network_label"]` = "public"  
 * `kong["branch"]` = "master"
 
+-- when testing swift with cloudfiles backed glance the following is needed:
+
+* `swift["swift_store_region"]` - Region in Rackspace Cloud Files to use for data store
+
 
 Templates
 =====
@@ -59,7 +63,7 @@ Author:: William Kelly (<william.kelly@rackspace.com>)
 Author:: Darren Birkett (<darren.birkett@rackspace.co.uk>)  
 Author:: Evan Callicoat (<evan.callicoat@rackspace.com>)  
 
-Copyright 2012, Rackspace, Inc.  
+Copyright 2012, Rackspace US, Inc.  
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -67,8 +71,8 @@ You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

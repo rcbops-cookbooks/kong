@@ -2,7 +2,7 @@
 # Cookbook Name:: kong
 # Recipe:: default
 #
-# Copyright 2012, Rackspace Hosting, Inc.
+# Copyright 2012, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ end
     user "root"
     command "cp /tmp/images/tty/#{image} /opt/kong/include/sample_vm/#{image}"
     not_if do File.exists?("/opt/kong/include/sample_vm/#{image}") end
-  end 
+  end
 end
 
 execute "install virtualenv" do
@@ -75,6 +75,35 @@ keystone_admin_password = keystone["users"][keystone_admin_user]["password"]
 keystone_admin_tenant = keystone["users"][keystone_admin_user]["default_tenant"]
 swift_proxy_endpoint = get_access_endpoint("swift-proxy-server", "swift", "proxy")
 swift = get_settings_by_role("swift-proxy-server", "swift")
+
+glance = get_settings_by_role("glance-api", "glance")
+
+
+swift_store_auth_address = "http://swiftendpoint"
+swift_store_user = "swift_store_user"
+swift_store_tenant = "swift_store_tenant"
+swift_store_key = "swift_store_key"
+swift_store_container = "container"
+
+if glance && glance["api"]["swift_store_auth_address"].nil?
+  swift_store_auth_address="http://#{ks_service_endpoint["host"]}:#{ks_service_endpoint["port"]}"
+  swift_store_tenant=glance["service_tenant_name"]
+  swift_store_user=glance["service_user"]
+  swift_store_key=glance["service_pass"]
+  swift_store_container = glance["api"]["swift"]["store_container"]
+  swift_store_region="RegionOne"
+elsif glance
+  swift_store_auth_address=glance["api"]["swift_store_auth_address"]
+  swift_store_user=glance["api"]["swift_store_user"]
+  swift_store_tenant=glance["api"]["swift_store_tenant"]
+  swift_store_key=glance["api"]["swift_store_key"]
+  swift_store_container = glance["api"]["swift"]["store_container"]
+  if node["kong"]["swift_store_region"].nil?
+      swift_store_region="RegionOne"
+  else
+      swift_store_region=node["kong"]["swift_store_region"]
+  end
+end
 
 swift_authmode = "swauth"
 if not swift.nil?
@@ -98,21 +127,27 @@ template "/opt/kong/etc/config.ini" do
   group "root"
   mode "0644"
   variables(
-    "ks_service_endpoint" => ks_service_endpoint,
-    "keystone_region" => 'RegionOne',
-    "keystone_user" => keystone_admin_user,
-    "keystone_pass" => keystone_admin_password,
-    "keystone_tenant" => keystone_admin_tenant,
-    "nova_network_label" => node["nova"]["network_label"],
-    "swift_proxy_host" => swift_proxy_host,
-    "swift_proxy_port" => swift_proxy_port,
-    "swift_auth_prefix" => "/auth/",
-    "swift_ssl_auth" => ssl_auth,
-    "swift_auth_type" => swift_authmode,
-    "swift_account" => node["swift"]["account"],
-    "swift_user" => node["swift"]["username"],
-    "swift_pass" => node["swift"]["password"]
-  )
+            "ks_service_endpoint" => ks_service_endpoint,
+            "keystone_region" => 'RegionOne',
+            "keystone_user" => keystone_admin_user,
+            "keystone_pass" => keystone_admin_password,
+            "keystone_tenant" => keystone_admin_tenant,
+            "nova_network_label" => node["nova"]["network_label"],
+            "swift_store_region" => swift_store_region,
+            "swift_proxy_host" => swift_proxy_host,
+            "swift_proxy_port" => swift_proxy_port,
+            "swift_auth_prefix" => "/auth/",
+            "swift_ssl_auth" => ssl_auth,
+            "swift_auth_type" => swift_authmode,
+            "swift_account" => node["swift"]["account"],
+            "swift_user" => node["swift"]["username"],
+            "swift_pass" => node["swift"]["password"],
+            "swift_store_auth_address" => swift_store_auth_address,
+            "swift_store_user" => swift_store_user,
+            "swift_store_key" => swift_store_key,
+            "swift_store_tenant" => swift_store_tenant,
+            "swift_store_container" => swift_store_container
+            )
 end
 
 execute "Kong: Nova test suite" do
