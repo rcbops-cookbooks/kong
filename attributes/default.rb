@@ -1,12 +1,12 @@
-default["swift"]["auth_port"] = "443"
-default["swift"]["auth_prefix"] = "/auth/"
-default["swift"]["auth_ssl"] = "yes"
-default["swift"]["account"] = "system"
-default["swift"]["username"] = "root"
-default["swift"]["password"] = "password"
+default["swift"]["auth_port"] = "443"                 # node_attribute
+default["swift"]["auth_prefix"] = "/auth/"            # node_attribute
+default["swift"]["auth_ssl"] = "yes"                  # node_attribute
+default["swift"]["account"] = "system"                # node_attribute
+default["swift"]["username"] = "root"                 # node_attribute
+default["swift"]["password"] = "password"             # node_attribute
 
-default["nova"]["network_label"] = "public"
+default["nova"]["network_label"] = "public"           # node_attribute
 
-default["kong"]["branch"] = "master"
+default["kong"]["branch"] = "master"                  # node_attribute
 
-default["swift"]["swift_store_region"] = "RegionOne"
+default["swift"]["swift_store_region"] = "RegionOne"  # node_attribute
