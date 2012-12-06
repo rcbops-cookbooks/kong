@@ -76,7 +76,7 @@ keystone_admin_tenant = keystone["users"][keystone_admin_user]["default_tenant"]
 swift_proxy_endpoint = get_access_endpoint("swift-proxy-server", "swift", "proxy")
 swift = get_settings_by_role("swift-proxy-server", "swift")
 
-glance = get_settings_by_role("glance-api", "glance")
+registry = get_settings_by_role("glance-registry", "glance")
 
 
 swift_store_auth_address = "http://swiftendpoint"
@@ -85,19 +85,19 @@ swift_store_tenant = "swift_store_tenant"
 swift_store_key = "swift_store_key"
 swift_store_container = "container"
 
-if glance && glance["api"]["swift_store_auth_address"].nil?
+if registry && registry["api"]["swift_store_auth_address"].nil?
   swift_store_auth_address="http://#{ks_service_endpoint["host"]}:#{ks_service_endpoint["port"]}"
-  swift_store_tenant=glance["service_tenant_name"]
-  swift_store_user=glance["service_user"]
-  swift_store_key=glance["service_pass"]
-  swift_store_container = glance["api"]["swift"]["store_container"]
+  swift_store_tenant=registry["service_tenant_name"]
+  swift_store_user=registry["service_user"]
+  swift_store_key=registry["service_pass"]
+  swift_store_container = registry["api"]["swift"]["store_container"]
   swift_store_region="RegionOne"
-elsif glance
-  swift_store_auth_address=glance["api"]["swift_store_auth_address"]
-  swift_store_user=glance["api"]["swift_store_user"]
-  swift_store_tenant=glance["api"]["swift_store_tenant"]
-  swift_store_key=glance["api"]["swift_store_key"]
-  swift_store_container = glance["api"]["swift"]["store_container"]
+elsif registry
+  swift_store_auth_address=registry["api"]["swift_store_auth_address"]
+  swift_store_user=registry["api"]["swift_store_user"]
+  swift_store_tenant=registry["api"]["swift_store_tenant"]
+  swift_store_key=registry["api"]["swift_store_key"]
+  swift_store_container = registry["api"]["swift"]["store_container"]
   if node["kong"]["swift_store_region"].nil?
       swift_store_region="RegionOne"
   else
