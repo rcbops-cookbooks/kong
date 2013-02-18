@@ -13,8 +13,8 @@ Chef 0.10.0 or higher required (for Chef environment use).
 Platforms
 --------
 
-* Ubuntu-12.04
-* Fedora-17
+* CentOS >= 6.3
+* Ubuntu >= 12.04
 
 
 Recipes
@@ -62,6 +62,7 @@ Author:: Joseph Breu (<joseph.breu@rackspace.com>)
 Author:: William Kelly (<william.kelly@rackspace.com>)  
 Author:: Darren Birkett (<darren.birkett@rackspace.co.uk>)  
 Author:: Evan Callicoat (<evan.callicoat@rackspace.com>)  
+Author:: Matt Thompson(<matt.thompson@rackspace.co.uk>)
 
 Copyright 2012, Rackspace US, Inc.  
 
