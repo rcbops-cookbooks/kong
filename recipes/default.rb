@@ -38,7 +38,7 @@ execute "checkout kong branch" do
   user "root"
 end
 
-directory "/tmp/images/tty" do
+directory "/tmp/images/cirros" do
   action :create
   group "root"
   owner "root"
@@ -46,18 +46,18 @@ directory "/tmp/images/tty" do
   recursive true
 end
 
-%w{ttylinux.img ttylinux-vmlinuz ttylinux-initrd}.each do |image|
+%w{cirros-0.3.1-x86_64-blank.img cirros-0.3.1-x86_64-vmlinuz cirros-0.3.1-x86_64-initrd}.each do |image|
   execute "grab the sample_vm #{image}" do
     cwd "/tmp/images"
     user "root"
-    command "curl http://build.monkeypuppetlabs.com/ttylinux.tgz | tar -zx -C tty/"
-    not_if do File.exists?("/tmp/images/tty/#{image}") end
+    command "curl cirros-0.3.1-x86_64-uec.tar.gz | tar -zx -C cirros/"
+    not_if do File.exists?("/tmp/images/cirros/#{image}") end
   end
 
   execute "copy sample_vm #{image} " do
     cwd "/opt/kong/include/sample_vm"
     user "root"
-    command "cp /tmp/images/tty/#{image} /opt/kong/include/sample_vm/#{image}"
+    command "cp /tmp/images/cirros/#{image} /opt/kong/include/sample_vm/#{image}"
     not_if do File.exists?("/opt/kong/include/sample_vm/#{image}") end
   end
 end
