@@ -50,7 +50,7 @@ end
   execute "grab the sample_vm #{image}" do
     cwd "/tmp/images"
     user "root"
-    command "curl cirros-0.3.1-x86_64-uec.tar.gz | tar -zx -C cirros/"
+    command "curl http://build.monkeypuppetlabs.com/cirros-0.3.1-x86_64-uec.tar.gz | tar -zx -C cirros/"
     not_if do File.exists?("/tmp/images/cirros/#{image}") end
   end
 
