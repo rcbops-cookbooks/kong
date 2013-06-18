@@ -25,20 +25,13 @@
   end
 end
 
-execute "git clone https://github.com/rcbops/kong" do
-  command "git clone https://github.com/rcbops/kong"
-  cwd "/opt"
-  user "root"
-  not_if do File.exists?("/opt/kong") end
+git "/opt/kong" do
+  repository "https://github.com/rcbops/kong"
+  reference "master"
+  action "checkout"
 end
 
-execute "checkout kong branch" do
-  command "git checkout #{node['kong']['branch']}"
-  cwd "/opt/kong"
-  user "root"
-end
-
-directory "/tmp/images/cirros" do
+directory "/#{Chef::Config[:file_cache_path]}/images/cirros" do
   action :create
   group "root"
   owner "root"
@@ -46,18 +39,25 @@ directory "/tmp/images/cirros" do
   recursive true
 end
 
-%w{cirros-0.3.1-x86_64-blank.img cirros-0.3.1-x86_64-vmlinuz cirros-0.3.1-x86_64-initrd}.each do |image|
-  execute "grab the sample_vm #{image}" do
-    cwd "/tmp/images"
-    user "root"
-    command "curl http://build.monkeypuppetlabs.com/cirros-0.3.1-x86_64-uec.tar.gz | tar -zx -C cirros/"
-    not_if do File.exists?("/tmp/images/cirros/#{image}") end
-  end
+# Download tar
+remote_file "/#{Chef::Config[:file_cache_path]}/images/cirros-0.3.1-x86_64-uec.tar.gz" do
+  source "http://build.monkeypuppetlabs.com/cirros-0.3.1-x86_64-uec.tar.gz"
+end
 
+# Extract tar
+execute "extract downloaded image" do
+  cwd "/#{Chef::Config[:file_cache_path]}/images"
+  user "root"
+  command "tar -zxf cirros-0.3.1-x86_64-uec.tar.gz -C cirros/"
+end
+
+%w{cirros-0.3.1-x86_64-blank.img
+  cirros-0.3.1-x86_64-vmlinuz cirros-0.3.1-x86_64-initrd}.each do |image|
   execute "copy sample_vm #{image} " do
     cwd "/opt/kong/include/sample_vm"
     user "root"
-    command "cp /tmp/images/cirros/#{image} /opt/kong/include/sample_vm/#{image}"
+    command "cp /#{Chef::Config[:file_cache_path]}/images/cirros/#{image} \
+      /opt/kong/include/sample_vm/#{image}"
     not_if do File.exists?("/opt/kong/include/sample_vm/#{image}") end
   end
 end
@@ -68,17 +68,28 @@ execute "install virtualenv" do
   user "root"
 end
 
-ks_service_endpoint = get_access_endpoint("keystone-api", "keystone","service-api")
-keystone = get_settings_by_role("keystone-setup", "keystone")
+
+if Chef::Config[:solo]
+  ks_service_endpoint = node["solo"]["ks_service_endpoint"]
+  keystone = node["solo"]["keystone_settings"]
+  swift_proxy_endpoint = node["solo"]["swift_proxy_endpoint"]
+  swift = node["solo"]["swift_settings"]
+  registry = node["solo"]["glance_settings"]
+
+else
+  ks_service_endpoint = get_access_endpoint(
+    "keystone-api", "keystone", "service-api")
+  keystone = get_settings_by_role("keystone-setup", "keystone")
+  swift_proxy_endpoint = get_access_endpoint(
+    "swift-proxy-server", "swift", "proxy")
+  swift = get_settings_by_role("swift-proxy-server", "swift")
+  registry = get_settings_by_role("glance-registry", "glance")
+end
+
 keystone_admin_user = keystone["admin_user"]
 keystone_admin_password = keystone["users"][keystone_admin_user]["password"]
-keystone_admin_tenant = keystone["users"][keystone_admin_user]["default_tenant"]
-swift_proxy_endpoint = get_access_endpoint("swift-proxy-server", "swift", "proxy")
-swift = get_settings_by_role("swift-proxy-server", "swift")
-
-registry = get_settings_by_role("glance-registry", "glance")
-
-
+keystone_admin_tenant = keystone["users"]\
+  [keystone_admin_user]["default_tenant"]
 swift_store_auth_address = "http://swiftendpoint"
 swift_store_user = "swift_store_user"
 swift_store_tenant = "swift_store_tenant"
@@ -86,7 +97,8 @@ swift_store_key = "swift_store_key"
 swift_store_container = "container"
 
 if registry && registry["api"]["swift_store_auth_address"].nil?
-  swift_store_auth_address="http://#{ks_service_endpoint["host"]}:#{ks_service_endpoint["port"]}"
+  swift_store_auth_address = "http://#{ks_service_endpoint["host"]}"\
+    + ":#{ks_service_endpoint["port"]}"
   swift_store_tenant=registry["service_tenant_name"]
   swift_store_user=registry["service_user"]
   swift_store_key=registry["service_pass"]
@@ -99,9 +111,9 @@ elsif registry
   swift_store_key=registry["api"]["swift_store_key"]
   swift_store_container = registry["api"]["swift"]["store_container"]
   if node["kong"]["swift_store_region"].nil?
-      swift_store_region="RegionOne"
+    swift_store_region="RegionOne"
   else
-      swift_store_region=node["kong"]["swift_store_region"]
+    swift_store_region=node["kong"]["swift_store_region"]
   end
 end
 
@@ -114,11 +126,11 @@ ssl_auth = "no"
 swift_proxy_host = ""
 swift_proxy_port = ""
 if not swift_proxy_endpoint.nil?
-    if swift_proxy_endpoint["scheme"] == "https"
-        ssl_auth = "yes"
-    end
-    swift_proxy_host = swift_proxy_endpoint["host"]
-    swift_proxy_port = swift_proxy_endpoint["port"]
+  if swift_proxy_endpoint["scheme"] == "https"
+    ssl_auth = "yes"
+  end
+  swift_proxy_host = swift_proxy_endpoint["host"]
+  swift_proxy_port = swift_proxy_endpoint["port"]
 end
 
 template "/opt/kong/etc/config.ini" do
@@ -127,32 +139,32 @@ template "/opt/kong/etc/config.ini" do
   group "root"
   mode "0644"
   variables(
-            "ks_service_endpoint" => ks_service_endpoint,
-            "keystone_region" => 'RegionOne',
-            "keystone_user" => keystone_admin_user,
-            "keystone_pass" => keystone_admin_password,
-            "keystone_tenant" => keystone_admin_tenant,
-            "nova_network_label" => node["nova"]["network_label"],
-            "swift_store_region" => swift_store_region,
-            "swift_proxy_host" => swift_proxy_host,
-            "swift_proxy_port" => swift_proxy_port,
-            "swift_auth_prefix" => "/auth/",
-            "swift_ssl_auth" => ssl_auth,
-            "swift_auth_type" => swift_authmode,
-            "swift_account" => node["swift"]["account"],
-            "swift_user" => node["swift"]["username"],
-            "swift_pass" => node["swift"]["password"],
-            "swift_store_auth_address" => swift_store_auth_address,
-            "swift_store_user" => swift_store_user,
-            "swift_store_key" => swift_store_key,
-            "swift_store_tenant" => swift_store_tenant,
-            "swift_store_container" => swift_store_container
-            )
+    "ks_service_endpoint" => ks_service_endpoint,
+    "keystone_region" => 'RegionOne',
+    "keystone_user" => keystone_admin_user,
+    "keystone_pass" => keystone_admin_password,
+    "keystone_tenant" => keystone_admin_tenant,
+    "nova_network_label" => node["nova"]["network_label"],
+    "swift_store_region" => swift_store_region,
+    "swift_proxy_host" => swift_proxy_host,
+    "swift_proxy_port" => swift_proxy_port,
+    "swift_auth_prefix" => "/auth/",
+    "swift_ssl_auth" => ssl_auth,
+    "swift_auth_type" => swift_authmode,
+    "swift_account" => node["swift"]["account"],
+    "swift_user" => node["swift"]["username"],
+    "swift_pass" => node["swift"]["password"],
+    "swift_store_auth_address" => swift_store_auth_address,
+    "swift_store_user" => swift_store_user,
+    "swift_store_key" => swift_store_key,
+    "swift_store_tenant" => swift_store_tenant,
+    "swift_store_container" => swift_store_container
+  )
 end
 
-execute "Kong: Nova test suite" do
-  command "./run_tests.sh -V --nova"
-  cwd "/opt/kong"
-  user "root"
-  action :nothing
-end
+#execute "Kong: Nova test suite" do
+#  command "./run_tests.sh -V --nova"
+#  cwd "/opt/kong"
+#  user "root"
+#  action :nothing
+#end

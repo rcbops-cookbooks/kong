@@ -1,0 +1,88 @@
+---
+
+platforms:
+- name: vagrant-ubuntu-12.04
+  driver_plugin: vagrant
+  driver_config:
+    box: canonical-ubuntu-12.04
+    box_url: http://cloud-images.ubuntu.com/vagrant/precise/current/precise-server-cloudimg-amd64-vagrant-disk1.box
+    require_chef_omnibus: 11.2.0-1
+  run_list:
+    - recipe[apt]
+- name: vagrant-centos-6.3
+  driver_plugin: vagrant
+  driver_config:
+    box: opscode-centos-6.3
+    box_url: http://opscode-vm.s3.amazonaws.com/vagrant/opscode_centos-6.3_chef-11.2.0.box
+  run_list:
+    - recipe[yum::epel]
+- name: rackspace-ubuntu-12.04
+  driver_plugin: rackspace
+  driver_config:
+    image_id: e4dbdba7-b2a4-4ee5-8e8f-4595b6d694ce
+    require_chef_omnibus: 11.2.0-1
+  run_list:
+    - recipe[apt]
+- name: rackspace-centos-6.3
+  driver_plugin: rackspace
+  driver_config:
+    image_id: da1f0392-8c64-468f-a839-a9e56caebf07
+    require_chef_omnibus: 11.2.0-1
+  run_list:
+    - recipe[yum::epel]
+
+
+suites:
+- name: default
+  run_list:
+  - recipe[minitest-handler]
+  - recipe[kong_test::default]
+  attributes:
+    nova:
+        network_label: network
+    swift:
+        account: account
+        swift_user: user
+        swift_pass: user
+    solo:
+      keystone_settings:
+          admin_user: admin
+          users:
+            admin:
+              password: password
+              default_tenant: demo
+      glance_settings:
+        service_tenant_name: registry
+        service_user: registry
+        service_pass: password
+        api:
+            swift_store_auth_address: 1.2.3.4
+            swift:
+                store_container: container
+      swift_settings:
+        swift_store_auth_address: http://dummy.uri:76
+        swift_store_user: demo
+        swift_store_tenant: demo
+        swift_store_key: key
+
+      ks_service_endpoint:
+          port: 79
+          host: dummy.uri
+          uri: http://dummy.uri:79
+          scheme: http
+      ec2_public_endpoint:
+          port: 78
+          host: dummy.uri
+          uri: http://dummy.uri:78
+          scheme: http
+      swift_proxy_endpoint:
+          port: 77
+          host: dummy.uri
+          uri: http://dummy.uri:77
+          scheme: http
+
+    "ha.swift-only": y
+    kong:
+      swift_store_region: RegionOne
+      platform:
+        packages: [git, bc, lvm2]
