@@ -1,3 +1,4 @@
+name              "kong"
 maintainer        "Rackspace Hosting, Inc."
 license           "Apache 2.0"
 description       "kong module"
@@ -8,6 +9,6 @@ version           "1.0.14"
   supports os
 end
 
-%w{ osops-utils }.each do |dep|
+%w{ osops-utils sysctl }.each do |dep|
   depends dep
 end
