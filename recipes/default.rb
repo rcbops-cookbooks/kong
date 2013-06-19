@@ -69,7 +69,7 @@ execute "install virtualenv" do
 end
 
 ks_service_endpoint = get_access_endpoint("keystone-api", "keystone","service-api")
-keystone = get_settings_by_role("keystone-setup", "keystone")
+keystone = get_settings_by_role("keystone", "keystone")
 keystone_admin_user = keystone["admin_user"]
 keystone_admin_password = keystone["users"][keystone_admin_user]["password"]
 keystone_admin_tenant = keystone["users"][keystone_admin_user]["default_tenant"]
