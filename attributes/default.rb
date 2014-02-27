@@ -9,4 +9,4 @@ default["nova"]["network_label"] = "public"           # node_attribute
 
 default["kong"]["branch"] = "master"                  # node_attribute
 
-default["swift"]["swift_store_region"] = "RegionOne"  # node_attribute
+default["kong"]["swift_store_region"] = nil           # node_attribute
